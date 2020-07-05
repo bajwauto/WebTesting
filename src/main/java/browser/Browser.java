@@ -1,0 +1,337 @@
+package browser;
+
+import java.util.NoSuchElementException;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
+import org.openqa.selenium.By;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.edge.EdgeDriver;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
+import org.openqa.selenium.support.ui.WebDriverWait;
+
+import io.github.bonigarcia.wdm.WebDriverManager;
+import properties.Property;
+import utils.Utility;
+
+public class Browser {
+	private WebDriver driver;
+	private Actions actions;
+
+	public Browser(String browser) {
+		switch (browser.trim().toLowerCase()) {
+		case "edge":
+			WebDriverManager.edgedriver().setup();
+			driver = new EdgeDriver();
+			break;
+		case "firefox":
+			WebDriverManager.firefoxdriver().setup();
+			driver = new FirefoxDriver();
+			break;
+		case "chrome":
+		default:
+			ChromeOptions options = new ChromeOptions();
+			options.addArguments("--disable-notifications");
+			WebDriverManager.chromedriver().setup();
+			driver = new ChromeDriver(options);
+			actions = new Actions(driver);
+		}
+	}
+
+	/**
+	 * This method is used to maximize the browser window opened by the WebDriver
+	 */
+	public void maximize() {
+		driver.manage().window().maximize();
+	}
+
+	/**
+	 * This method is used to set the implicit wait timeout. Specifies the amount of
+	 * time the driver should wait when searching for an element if it is not
+	 * immediately present.
+	 * 
+	 * @param time - the amount of time to wait
+	 * @param unit - the unit of time
+	 */
+	public void setImplicitTimeout(long time, TimeUnit unit) {
+		driver.manage().timeouts().implicitlyWait(time, unit);
+	}
+
+	/**
+	 * This method is used to navigate to the provided URL
+	 * 
+	 * @param url - url of the website to navigate to
+	 */
+	public void goTo(String url) {
+		driver.get(url);
+	}
+
+	/**
+	 * This method is used to get the window handle for the currently active window
+	 * 
+	 * @return String containing the window handle for the currently active window
+	 */
+	public String getWindowHandle() {
+		return driver.getWindowHandle();
+	}
+
+	/**
+	 * This method is used to get the window handles for all the windows opened by
+	 * the WebDriver
+	 * 
+	 * @return a Set containing the window handles of all the windows opened by the
+	 *         WebDriver
+	 */
+	public Set<String> getWindowHandles() {
+		return driver.getWindowHandles();
+	}
+
+	/**
+	 * This method is used to get the identification property of an object stored in
+	 * the Object Repository
+	 * 
+	 * @param objectName - name of the object as stored in the Object Repository
+	 * @return - reference to the object locator
+	 */
+	public By getStoredObjectProperty(String objectName) {
+		By by = null;
+		String orPath = Utility.getAbsoluteProjectPaths("or");
+		try {
+			String propertyValuePair = Property.read(orPath, objectName);
+			String propertyName = propertyValuePair.split("\\s*:\\s*")[0];
+			String propertyValue = propertyValuePair.split("\\s*:\\s*")[1];
+			switch (propertyName.toLowerCase()) {
+			case "id":
+				by = By.id(propertyValue);
+				break;
+			case "xpath":
+				by = By.xpath(propertyValue);
+				break;
+			case "cssselector":
+				by = By.cssSelector(propertyValue);
+				break;
+			case "name":
+				by = By.name(propertyValue);
+				break;
+			case "classname":
+				by = By.className(propertyValue);
+				break;
+			case "tagname":
+				by = By.tagName(propertyValue);
+				break;
+			case "linktext":
+				by = By.linkText(propertyValue);
+				break;
+			case "partiallinktext":
+				by = By.partialLinkText(propertyValue);
+				break;
+			}
+		} catch (Exception e) {
+			System.err.println("The object \"" + objectName + "\" could not be found in the OR");
+			e.printStackTrace();
+		}
+		return by;
+	}
+
+	/**
+	 * This method is used to find an object on the screen
+	 * 
+	 * @param by - reference to the Object locator
+	 * @return - reference to the webElement, if found; else, null
+	 */
+	public WebElement findElement(By by) {
+		WebElement element;
+		if (by == null) {
+			element = null;
+			System.err.println("Could not find element having null locator!!!");
+		} else {
+			WebDriverWait wait = new WebDriverWait(driver, 20);
+			try {
+				element = wait.until(ExpectedConditions.visibilityOfElementLocated(by));
+			} catch (Exception e) {
+				element = null;
+				e.printStackTrace();
+			}
+		}
+		return element;
+	}
+
+	/**
+	 * This method is used to find the object stored in the Object repository on the
+	 * screen
+	 * 
+	 * @param objectName - name of the object as mentioned in the OR
+	 * @return - reference to the WebElement, if found; else, null
+	 */
+	public WebElement findElement(String objectName) {
+		By by = getStoredObjectProperty(objectName);
+		return findElement(by);
+	}
+
+	/**
+	 * This method is used to write a text in a WebElement
+	 * 
+	 * @param element - reference to the Object on screen
+	 * @param text    - text to be written to the WebElement
+	 */
+	public void sendKeys(WebElement element, String text) {
+		if (element != null)
+			element.sendKeys(text);
+		else
+			System.err.println("Cannot perform sendKeys operation on a null object!!!");
+	}
+
+	/**
+	 * This method is used to write a text in a WebElement
+	 * 
+	 * @param by   - reference to the Object Locator
+	 * @param text - text to be written to the WebElement
+	 */
+	public void sendKeys(By by, String text) {
+		WebElement element = findElement(by);
+		sendKeys(element, text);
+	}
+
+	/**
+	 * This method is used to write a text in a WebElement
+	 * 
+	 * @param objectName - name of the object as stored in the OR
+	 * @param text       - text to be written to the WebElement
+	 */
+	public void sendKeys(String objectName, String text) {
+		By by = getStoredObjectProperty(objectName);
+		sendKeys(by, text);
+	}
+
+	/**
+	 * This method is used to perform left click operation on an Object
+	 * 
+	 * @param element - reference to the Object
+	 */
+	public void click(WebElement element) {
+		if (element == null)
+			System.err.println("Cannot click on a null object!!!");
+		else
+			element.click();
+	}
+
+	/**
+	 * This method is used to perform left click operation on an Object
+	 * 
+	 * @param by - reference to the Object locator
+	 */
+	public void click(By by) {
+		WebElement element = findElement(by);
+		click(element);
+	}
+
+	/**
+	 * This method is used to perform left click operation on an Object
+	 * 
+	 * @param objectName- name of the object as stored in the OR
+	 */
+	public void click(String objectName) {
+		By by = getStoredObjectProperty(objectName);
+		click(by);
+	}
+
+	/**
+	 * This method is used to move the mouse to the middle of an Object
+	 * 
+	 * @param element - reference to the Object
+	 */
+	public void hoverMouse(WebElement element) {
+		if (element == null)
+			System.err.println("Cannot move the mouse to a null object!!!");
+		else
+			actions.moveToElement(element).build().perform();
+	}
+
+	/**
+	 * This method is used to move the mouse to the middle of an Object
+	 * 
+	 * @param by - reference to the Object locator
+	 */
+	public void hoverMouse(By by) {
+		WebElement element = findElement(by);
+		hoverMouse(element);
+	}
+
+	/**
+	 * This method is used to get the visible (i.e. not hidden by CSS) text of this
+	 * element, including sub-elements.
+	 * 
+	 * @param element - reference to the Object
+	 * @return - the visible text of the Object
+	 */
+	public String getText(WebElement element) {
+		String text = "";
+		if (element == null)
+			System.err.println("Cannot fetch text of a null object!!!");
+		else
+			text = element.getText();
+		return text;
+	}
+
+	/**
+	 * This method is used to get the value of an attribute/property of an object
+	 * 
+	 * @param element   - reference to the WebElement
+	 * @param attribute - name of the attribute or property whose value is required
+	 * @return - The attribute/property's current value or null if the value is not
+	 *         set.
+	 */
+	public String getAttribute(WebElement element, String attribute) {
+		String attributeValue = "";
+		if (element == null)
+			System.err.println("Cannot fetch attribute values of a null object");
+		else
+			attributeValue = element.getAttribute(attribute);
+		return attributeValue;
+	}
+
+	/**
+	 * This method is used to select an option from a Drop-Down list
+	 * 
+	 * @param element        - reference to the DropDown object
+	 * @param optionToSelect - value/visible-text to be selected
+	 */
+	public void selectFromDropDown(WebElement element, String optionToSelect) {
+		if (element == null)
+			System.err.println("Cannot perform select operation on a null object!!!");
+		else {
+			Select dropDown = new Select(element);
+			try {
+				dropDown.selectByVisibleText(optionToSelect);
+			} catch (NoSuchElementException e1) {
+				try {
+					dropDown.selectByValue(optionToSelect);
+				} catch (NoSuchElementException e2) {
+					System.err.println("The option \"" + optionToSelect + "\"could not be selected from the dropdown");
+				}
+			}
+		}
+	}
+
+	/**
+	 * This method is used to close the currently active window which is opened by
+	 * the WebDriver
+	 */
+	public void close() {
+		driver.close();
+	}
+
+	/**
+	 * This method is used to quit the browser by closing all the windows opened by
+	 * the WebDriver
+	 */
+	public void quit() {
+		driver.quit();
+	}
+}
