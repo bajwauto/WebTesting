@@ -1,8 +1,11 @@
 package utils;
 
 import java.io.File;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Date;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -48,6 +51,40 @@ public class Utility {
 			matchesNGroups.add(currentMatchNGroups);
 		}
 		return matchesNGroups;
+	}
+
+	/**
+	 * This method is used to format a date into a given pattern
+	 * 
+	 * @param date   - date to be formatted
+	 * @param format - string containing the desired date format
+	 * @return - the formatted date
+	 */
+	public static String formatDate(Date date, String format) {
+		String formattedDate = "";
+		SimpleDateFormat simpleFormat = new SimpleDateFormat(format);
+		formattedDate = simpleFormat.format(date);
+		return formattedDate;
+	}
+
+	/**
+	 * This method is used to change the format of a given date to a desired format
+	 * 
+	 * @param date          - date to be formatted in form of a String
+	 * @param initialFormat - initial format of the date passed
+	 * @param desiredFormat - desired format of the date
+	 * @return - String containing the date in the desired format
+	 */
+	public static String changeDateFormat(String date, String initialFormat, String desiredFormat) {
+		String formattedDate = "";
+		SimpleDateFormat initialF = new SimpleDateFormat(initialFormat);
+		SimpleDateFormat finalF = new SimpleDateFormat(desiredFormat);
+		try {
+			formattedDate = finalF.format(initialF.parse(date));
+		} catch (ParseException e) {
+			e.printStackTrace();
+		}
+		return formattedDate;
 	}
 
 	/**
