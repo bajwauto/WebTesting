@@ -1,7 +1,11 @@
 package utils;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class Utility {
 	/**
@@ -22,6 +26,28 @@ public class Utility {
 	 */
 	public static String decode(String textToDecode) {
 		return new String(Base64.getDecoder().decode(textToDecode));
+	}
+
+	/**
+	 * This method is used to match and capture groups from a test string based on a
+	 * regular expression
+	 * 
+	 * @param test         - String to be tested against the provided regular
+	 *                     expression
+	 * @param regexPattern - regular expression pattern
+	 * @return - List of a list containing the all the matches and their groups.
+	 */
+	public static List<List<String>> getMatchesNGroups(String test, String regexPattern) {
+		List<List<String>> matchesNGroups = new ArrayList<List<String>>();
+		Pattern pattern = Pattern.compile(regexPattern);
+		Matcher matcher = pattern.matcher(test);
+		while (matcher.find()) {
+			List<String> currentMatchNGroups = new ArrayList<String>();
+			for (int i = 0; i <= matcher.groupCount(); i++)
+				currentMatchNGroups.add(matcher.group(i));
+			matchesNGroups.add(currentMatchNGroups);
+		}
+		return matchesNGroups;
 	}
 
 	/**
