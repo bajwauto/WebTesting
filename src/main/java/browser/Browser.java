@@ -8,6 +8,8 @@ import java.util.concurrent.TimeUnit;
 
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -26,6 +28,7 @@ import utils.Utility;
 public class Browser {
 	private WebDriver driver;
 	private Actions actions;
+	private JavascriptExecutor jse;
 
 	public Browser(String browser) {
 		switch (browser.trim().toLowerCase()) {
@@ -44,6 +47,7 @@ public class Browser {
 			WebDriverManager.chromedriver().setup();
 			driver = new ChromeDriver(options);
 			actions = new Actions(driver);
+			jse = (JavascriptExecutor) driver;
 		}
 	}
 
@@ -287,15 +291,17 @@ public class Browser {
 	}
 
 	/**
-	 * This method is used to write a text in a WebElement
+	 * This method is used to write a text in a WebElement after clearing its
+	 * existing contents
 	 * 
 	 * @param element - reference to the Object on screen
 	 * @param text    - text to be written to the WebElement
 	 */
 	public void sendKeys(WebElement element, String text) {
-		if (element != null)
+		if (element != null) {
+			element.sendKeys(Keys.chord(Keys.CONTROL, "a"));
 			element.sendKeys(text);
-		else
+		} else
 			System.err.println("Cannot perform sendKeys operation on a null object!!!");
 	}
 
@@ -363,6 +369,41 @@ public class Browser {
 			System.err.println("Cannot move the mouse to a null object!!!");
 		else
 			actions.moveToElement(element).build().perform();
+	}
+
+	/**
+	 * This method is used to perform the double click operation on an object
+	 * 
+	 * @param element - reference to the Object
+	 */
+	public void doubleClick(WebElement element) {
+		if (element == null)
+			System.err.println("Cannot perform double-click on a null object!!!");
+		else
+			actions.doubleClick(element).build().perform();
+	}
+
+	/**
+	 * This method is used to scroll down to the bottom of the page
+	 */
+	public void scrollToPageBottom() {
+		jse.executeScript("window.scrollTo(0,document.body.scrollHeight)");
+	}
+
+	/**
+	 * This method is used to scroll to the bottom of a page by taking small steps
+	 * 
+	 * @param stepSize - the pixel size of each step
+	 */
+	public void scrollToPageBottom(long stepSize) {
+		Double lastScrollPosition, currentScrollPosition;
+		currentScrollPosition = ((Number) jse.executeScript("return window.pageYOffset")).doubleValue();
+		lastScrollPosition = currentScrollPosition - 1;
+		while (currentScrollPosition > lastScrollPosition) {
+			lastScrollPosition = currentScrollPosition;
+			jse.executeScript("window.scrollBy(0," + stepSize + ")");
+			currentScrollPosition = ((Number) jse.executeScript("return window.pageYOffset")).doubleValue();
+		}
 	}
 
 	/**
