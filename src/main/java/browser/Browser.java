@@ -116,6 +116,15 @@ public class Browser {
 	}
 
 	/**
+	 * This method is used to switch to a frame
+	 * 
+	 * @param frameElement - reference to the frame
+	 */
+	public void switchToFrame(WebElement frameElement) {
+		driver.switchTo().frame(frameElement);
+	}
+
+	/**
 	 * This method is used to get the text from the alert
 	 * 
 	 * @return - the text present in the alert
@@ -384,6 +393,31 @@ public class Browser {
 	}
 
 	/**
+	 * This method is used to drag an object and drop it to a point which is xOffset
+	 * pixels and yOffset pixels away from the current point along the x-axis and
+	 * y-axis respectively
+	 * 
+	 * @param element - reference to the WebElement
+	 * @param xOffset - pixels to move along the x-axis
+	 * @param yOffset - pixels to move along the y-axis
+	 */
+	public void dragAndDrop(WebElement element, int xOffset, int yOffset) {
+		actions.dragAndDropBy(element, xOffset, yOffset).build().perform();
+	}
+
+	/**
+	 * This method is used to drag a source element and drop it on top of a target
+	 * element
+	 * 
+	 * @param sourceElement - object to be dragged
+	 * @param targetElement - object on which the source object is to be dropped
+	 */
+	public void dragAndDrop(WebElement sourceElement, WebElement targetElement) {
+//		actions.dragAndDrop(sourceElement, targetElement).build().perform();
+		actions.clickAndHold(sourceElement).moveToElement(targetElement).build().perform();
+	}
+
+	/**
 	 * This method is used to scroll down to the bottom of the page
 	 */
 	public void scrollToPageBottom() {
@@ -404,6 +438,15 @@ public class Browser {
 			jse.executeScript("window.scrollBy(0," + stepSize + ")");
 			currentScrollPosition = ((Number) jse.executeScript("return window.pageYOffset")).doubleValue();
 		}
+	}
+
+	/**
+	 * This method is used to bring an element into view by scrolling
+	 * 
+	 * @param element - reference to the object to be brought into view
+	 */
+	public void scrollIntoView(WebElement element) {
+		jse.executeScript("arguments[0].scrollIntoView(true)", element);
 	}
 
 	/**
