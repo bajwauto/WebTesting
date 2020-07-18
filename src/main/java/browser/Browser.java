@@ -1,15 +1,22 @@
 package browser;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
 
+import javax.imageio.ImageIO;
+
+import org.apache.commons.io.FileUtils;
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -23,6 +30,10 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 import io.github.bonigarcia.wdm.WebDriverManager;
 import properties.Property;
+import ru.yandex.qatools.ashot.AShot;
+import ru.yandex.qatools.ashot.Screenshot;
+import ru.yandex.qatools.ashot.coordinates.WebDriverCoordsProvider;
+import ru.yandex.qatools.ashot.shooting.ShootingStrategies;
 import utils.Utility;
 
 public class Browser {
@@ -46,9 +57,9 @@ public class Browser {
 			options.addArguments("--disable-notifications");
 			WebDriverManager.chromedriver().setup();
 			driver = new ChromeDriver(options);
-			actions = new Actions(driver);
-			jse = (JavascriptExecutor) driver;
 		}
+		actions = new Actions(driver);
+		jse = (JavascriptExecutor) driver;
 	}
 
 	/**
@@ -512,6 +523,66 @@ public class Browser {
 					System.err.println("The option \"" + optionToSelect + "\"could not be selected from the dropdown");
 				}
 			}
+		}
+	}
+
+	/**
+	 * This method is used to capture the screenshot and save it to the provided
+	 * location
+	 * 
+	 * @param filePath - path to the file where the screenshot is to be saved
+	 */
+	public void captureScreenshot(String filePath) {
+		File file = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+		try {
+			FileUtils.copyFile(file, new File(filePath));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * This method is used to capture screenshot of a webElement
+	 * 
+	 * @param filePath - path to the file where the screenshot is to be saved
+	 * @param element  - reference to the Object whose screenshot is to be captured
+	 */
+	public void captureScreenshot(String filePath, WebElement element) {
+		Screenshot screenshot = new AShot().coordsProvider(new WebDriverCoordsProvider())
+				.shootingStrategy(ShootingStrategies.viewportPasting(500)).takeScreenshot(driver, element);
+		try {
+			ImageIO.write(screenshot.getImage(), "jpg", new File(filePath));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * This method is used to highlight an object on screen and take screenshot of
+	 * the visible area
+	 * 
+	 * @param filePath - path to the file where the screenshot is to be saved
+	 * @param element  - object to be highlighted/boxed in the screenshot
+	 */
+	public void captureScreenshotOfHighlightedElement(String filePath, WebElement element) {
+		jse.executeScript("arguments[0].setAttribute('style','border:2px solid red;')", element);
+		captureScreenshot(filePath);
+		jse.executeScript("arguments[0].style.border='2px white;'", element);
+	}
+
+	/**
+	 * This method is used to capture the screenshot of the entire webpage by
+	 * scrolling down every 1 second, if needed
+	 * 
+	 * @param filePath - path to the file where the screenshot is to be saved
+	 */
+	public void capturePageScreenshot(String filePath) {
+		Screenshot screenshot = new AShot().coordsProvider(new WebDriverCoordsProvider())
+				.shootingStrategy(ShootingStrategies.viewportPasting(1000)).takeScreenshot(driver);
+		try {
+			ImageIO.write(screenshot.getImage(), "jpg", new File(filePath));
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
