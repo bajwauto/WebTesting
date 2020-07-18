@@ -82,6 +82,13 @@ public class Browser {
 	}
 
 	/**
+	 * This method is used to delete all the cookies of the current domain
+	 */
+	public void deleteAllCookies() {
+		driver.manage().deleteAllCookies();
+	}
+
+	/**
 	 * This method is used to navigate to the provided URL
 	 * 
 	 * @param url - url of the website to navigate to
@@ -133,6 +140,15 @@ public class Browser {
 	 */
 	public void switchToFrame(WebElement frameElement) {
 		driver.switchTo().frame(frameElement);
+	}
+
+	/**
+	 * This method is used to switch to a new tab/window opened by the webDriver
+	 * 
+	 * @param windowHandle - window handle of the window to switch to
+	 */
+	public void switchToWindow(String windowHandle) {
+		driver.switchTo().window(windowHandle);
 	}
 
 	/**
@@ -392,6 +408,16 @@ public class Browser {
 	}
 
 	/**
+	 * This method is used to move the mouse to the middle of an Object
+	 * 
+	 * @param by - reference to the Object locator
+	 */
+	public void hoverMouse(By by) {
+		WebElement element = findElement(by);
+		hoverMouse(element);
+	}
+
+	/**
 	 * This method is used to perform the double click operation on an object
 	 * 
 	 * @param element - reference to the Object
@@ -436,6 +462,13 @@ public class Browser {
 	}
 
 	/**
+	 * This method is used to scroll to the top of the page
+	 */
+	public void scrollToPageTop() {
+		jse.executeScript("window.scrollTo(0,0)");
+	}
+
+	/**
 	 * This method is used to scroll to the bottom of a page by taking small steps
 	 * 
 	 * @param stepSize - the pixel size of each step
@@ -458,16 +491,6 @@ public class Browser {
 	 */
 	public void scrollIntoView(WebElement element) {
 		jse.executeScript("arguments[0].scrollIntoView(true)", element);
-	}
-
-	/**
-	 * This method is used to move the mouse to the middle of an Object
-	 * 
-	 * @param by - reference to the Object locator
-	 */
-	public void hoverMouse(By by) {
-		WebElement element = findElement(by);
-		hoverMouse(element);
 	}
 
 	/**
@@ -535,7 +558,9 @@ public class Browser {
 	public void captureScreenshot(String filePath) {
 		File file = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
 		try {
-			FileUtils.copyFile(file, new File(filePath));
+			File dest = new File(filePath);
+			Utility.createDirectory(dest.getParent());
+			FileUtils.copyFile(file, dest);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -551,7 +576,9 @@ public class Browser {
 		Screenshot screenshot = new AShot().coordsProvider(new WebDriverCoordsProvider())
 				.shootingStrategy(ShootingStrategies.viewportPasting(500)).takeScreenshot(driver, element);
 		try {
-			ImageIO.write(screenshot.getImage(), "jpg", new File(filePath));
+			File dest = new File(filePath);
+			Utility.createDirectory(dest.getParent());
+			ImageIO.write(screenshot.getImage(), "jpg", dest);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -564,7 +591,7 @@ public class Browser {
 	 * @param filePath - path to the file where the screenshot is to be saved
 	 * @param element  - object to be highlighted/boxed in the screenshot
 	 */
-	public void captureScreenshotOfHighlightedElement(String filePath, WebElement element) {
+	public void captureScreenshotWithHighlightedElement(String filePath, WebElement element) {
 		jse.executeScript("arguments[0].setAttribute('style','border:2px solid red;')", element);
 		captureScreenshot(filePath);
 		jse.executeScript("arguments[0].style.border='2px white;'", element);
@@ -580,19 +607,12 @@ public class Browser {
 		Screenshot screenshot = new AShot().coordsProvider(new WebDriverCoordsProvider())
 				.shootingStrategy(ShootingStrategies.viewportPasting(1000)).takeScreenshot(driver);
 		try {
-			ImageIO.write(screenshot.getImage(), "jpg", new File(filePath));
+			File dest = new File(filePath);
+			Utility.createDirectory(dest.getParent());
+			ImageIO.write(screenshot.getImage(), "jpg", dest);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}
-
-	/**
-	 * This method is used to switch to a new tab/window opened by the webDriver
-	 * 
-	 * @param windowHandle
-	 */
-	public void switchToWindow(String windowHandle) {
-		driver.switchTo().window(windowHandle);
 	}
 
 	/**

@@ -32,6 +32,18 @@ public class Utility {
 	}
 
 	/**
+	 * This method is used to create a directory in the file system, if it does not
+	 * exist
+	 * 
+	 * @param dirPath - path to the directory to be created
+	 * @return - true, iff the directory was created, else false
+	 */
+	public static boolean createDirectory(String dirPath) {
+		File file = new File(dirPath);
+		return file.mkdirs();
+	}
+
+	/**
 	 * This method is used to match and capture groups from a test string based on a
 	 * regular expression
 	 * 
@@ -98,9 +110,13 @@ public class Utility {
 	private static String getProjectPaths(String entityName) {
 		String path = "";
 		switch (entityName) {
+		case "src":
+		case "screenshots":
+			path = entityName;
+			break;
 		case "main":
 		case "test":
-			path = "src/" + entityName;
+			path = getProjectPaths("src") + "/" + entityName;
 			break;
 		case "mainjava":
 			path = getProjectPaths("main") + "/java";
@@ -116,6 +132,10 @@ public class Utility {
 			break;
 		case "or":
 			path = getProjectPaths("testresources") + "/OR.properties";
+			break;
+		case "testData":
+			path = getProjectPaths("testresources") + "/" + entityName;
+			break;
 		}
 		return path;
 	}
