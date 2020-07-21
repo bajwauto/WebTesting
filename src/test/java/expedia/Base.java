@@ -16,20 +16,23 @@ import org.testng.annotations.Parameters;
 
 import browser.Browser;
 import utils.Utility;
+import static log.Log.*;
 
 public class Base {
-	protected Browser browser;
-	protected String vpScreenshotBAsePath = Utility.getAbsoluteProjectPaths("screenshots") + File.separator
+	protected static Browser browser;
+	protected static String vpScreenshotBasePath = Utility.getAbsoluteProjectPaths("screenshots") + File.separator
 			+ Utility.formatDate(new Date(), "dd-MMM-yy'" + File.separator + "'hh.mm a");
-	protected String currentVPSSPath;
-	protected int sscounter = 0;
-	protected int icounter = 1;
-	protected boolean captureScreenshots = false;
-	protected String lastTestMethod = "";
+	protected static String currentVPSSPath;
+	protected static int sscounter = 0;
+	protected static int icounter = 1;
+	protected static boolean captureScreenshots = false;
+	protected static String lastTestMethod = "";
 
 	@BeforeSuite(alwaysRun = true)
 	@Parameters({ "browser", "captureScreenshots" })
 	public void suiteSetup(@Optional("chrome") String browserName, @Optional("true") String captureScreenshots) {
+		getLogger("Expedia");
+		info("Suite execution started");
 		browser = new Browser(browserName);
 		browser.maximize();
 		this.captureScreenshots = Boolean.parseBoolean(captureScreenshots);
@@ -44,8 +47,8 @@ public class Base {
 			icounter++;
 		else
 			icounter = 1;
-		
-		currentVPSSPath = vpScreenshotBAsePath + File.separator + currentTestMethod + File.separator + "Dataset"
+
+		currentVPSSPath = vpScreenshotBasePath + File.separator + currentTestMethod + File.separator + "Dataset"
 				+ icounter + "_SS[XXX].jpg";
 		lastTestMethod = currentTestMethod;
 		browser.deleteAllCookies();
@@ -55,6 +58,7 @@ public class Base {
 	@AfterSuite(alwaysRun = true)
 	public void suiteTeardown() {
 		browser.quit();
+		info("Suite execution completed");
 	}
 
 	public void clickTab(String tabName) {
@@ -150,7 +154,7 @@ public class Base {
 		}
 	}
 
-	public void captureScreenshot(boolean fullPageScreenshot) {
+	protected void captureScreenshot(boolean fullPageScreenshot) {
 		if (captureScreenshots) {
 			sscounter++;
 			if (fullPageScreenshot)
@@ -160,7 +164,7 @@ public class Base {
 		}
 	}
 
-	public void captureScreenshot(WebElement element) {
+	protected void captureScreenshot(WebElement element) {
 		if (captureScreenshots) {
 			sscounter++;
 			browser.captureScreenshotWithHighlightedElement(currentVPSSPath.replaceAll("\\[XXX\\]", sscounter + ""),
