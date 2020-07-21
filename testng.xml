@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
 <suite name="ExpediaRegression">
-	<parameter name="browser" value="firefox"/>
-	<parameter name="captureScreenshots" value="true"/>
-	<parameter name="url" value="https://www.expedia.co.in/"/>
+	<listeners>
+		<listener class-name="expedia.Events" />
+	</listeners>
+	<parameter name="browser" value="firefox" />
+	<parameter name="captureScreenshots" value="true" />
+	<parameter name="url" value="https://www.expedia.co.in/" />
 	<test name="Flights">
 		<classes>
 			<class name="expedia.Flights" />

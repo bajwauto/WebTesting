@@ -1,0 +1,34 @@
+<Configuration status="WARN">
+	<Properties>
+		<Property name="standardPattern">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %m%n
+		</Property>
+	</Properties>
+	<Appenders>
+		<Console name="Console" target="SYSTEM_OUT">
+			<PatternLayout pattern="${standardPattern}" />
+		</Console>
+		<File name="htmlLog" fileName="logs/ExecutionLog.html" append="false">
+			<HTMLLayout charset="UTF-8" title="Execution Log"
+				locationInfo="true" />
+		</File>
+		<RollingFile name="textLog"
+			fileName="logs/ExecutionLog.log"
+			filePattern="logs/ExecutionLog_%d{dd.MM.yyyy}.log">
+			<PatternLayout pattern="${standardPattern}" />
+			<Policies>
+				<SizeBasedTriggeringPolicy size="10MB" />
+			</Policies>
+			<DefaultRolloverStrategy max="2" />
+		</RollingFile>
+	</Appenders>
+	<Loggers>
+		<Root level="info">
+			<AppenderRef ref="Console" />
+		</Root>
+		<Logger name="Expedia" level="info" additivity="false">
+			<AppenderRef ref="Console" />
+			<AppenderRef ref="htmlLog" />
+			<AppenderRef ref="textLog" />
+		</Logger>
+	</Loggers>
+</Configuration>
