@@ -10,6 +10,8 @@ public class Log {
 	 * This method is used to get/set the specified logger
 	 */
 	public static void getLogger(String loggerName) {
+		System.setProperty("mail.smtp.starttls.enable", "true");
+		System.setProperty("mail.smtp.ssl.trust", "smtp.gmail.com");
 		log = LogManager.getLogger(loggerName);
 	}
 
@@ -57,7 +59,7 @@ public class Log {
 	public static void error(String message) {
 		log.error(message);
 	}
-
+	
 	/**
 	 * This method will print a fatal message to the log
 	 * 
