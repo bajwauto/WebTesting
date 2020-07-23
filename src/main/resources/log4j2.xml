@@ -1,15 +1,26 @@
-<Configuration status="WARN">
+<Configuration status="INFO">
 	<Properties>
-		<Property name="standardPattern">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %m%n
-		</Property>
+		<Property name="standardPattern">%d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %-5level %logger{36} - %m%n</Property>
+		<Property name="mailSubject">Execution Log</Property>
+		<Property name="recipients">gurman5691@gmail.com</Property>
+		<Property name="sender">bajwauto@gmail.com</Property>
+		<Property name="host">smtp.gmail.com</Property>
+		<Property name="port">587</Property>
+		<Property name="username">${sys:emailUser}</Property>
+		<Property name="protocol">smtp</Property>
+		<Property name="password">${sys:emailPass}</Property>
+		<Property name="bufferSize">512</Property>
 	</Properties>
 	<Appenders>
 		<Console name="Console" target="SYSTEM_OUT">
 			<PatternLayout pattern="${standardPattern}" />
 		</Console>
-		<File name="htmlLog" fileName="logs/ExecutionLog.html" append="false">
+		<File name="htmlLog" fileName="logs/ExecutionLog.html"
+			append="false">
 			<HTMLLayout charset="UTF-8" title="Execution Log"
 				locationInfo="true" />
+			<RegexFilter regex="^.*[*!]{5,}.*$" onMatch="DENY"
+				onMismatch="ACCEPT" />
 		</File>
 		<RollingFile name="textLog"
 			fileName="logs/ExecutionLog.log"
@@ -20,6 +31,22 @@
 			</Policies>
 			<DefaultRolloverStrategy max="2" />
 		</RollingFile>
+		<SMTP name="mailLog" subject="${mailSubject}" to="${recipients}"
+			from="${sender}" smtpHost="${host}" smtpPort="${port}"
+			smtpUsername="${username}" smtpPassword="${password}"
+			buffersize="${bufferSize}" smtpProtocol="${protocol}"
+			ignoreExceptions="false" smtpdebug="true">
+			<PatternLayout pattern="${standardPattern}" />
+			<Filters>
+				<ThresholdFilter level="error" onMatch="ACCEPT"
+					onMismatch="NEUTRAL" />
+				<RegexFilter regex="^.*Suite execution completed.*$"
+					onMatch="ACCEPT" onMisMatch="DENY" />
+			</Filters>
+		</SMTP>
+		<Async name="asyncMail">
+			<AppenderRef ref="mailLog" />
+		</Async>
 	</Appenders>
 	<Loggers>
 		<Root level="info">
@@ -29,6 +56,10 @@
 			<AppenderRef ref="Console" />
 			<AppenderRef ref="htmlLog" />
 			<AppenderRef ref="textLog" />
+			<AppenderRef ref="asyncMail" />
 		</Logger>
+		<logger name="test" level="trace" additivity="false">
+			<AppenderRef ref="Console" />
+		</logger>
 	</Loggers>
 </Configuration>
