@@ -124,6 +124,9 @@ public class Utility {
 		case "mainresources":
 			path = getProjectPaths("main") + "/resources";
 			break;
+		case "configuration":
+			path = getProjectPaths("mainresources") + "/configuration.xml";
+			break;
 		case "testjava":
 			path = getProjectPaths("test") + "/java";
 			break;
