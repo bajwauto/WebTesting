@@ -5,7 +5,8 @@ import org.testng.annotations.Test;
 
 public class Flights extends Base {
 
-	@Test(dataProviderClass = Data.class, dataProvider = "excel", priority = 1, groups = { "regression" })
+	@Test(dataProviderClass = Data.class, dataProvider = "excel", priority = 1, groups = {
+			"regression" }, enabled = true)
 	public void oneWayFlight_checkEconomyClassResultsDefaultDate(Map<String, Object> data) {
 		String leavingFrom = (String) data.get("Leaving from");
 		String gointTo = (String) data.get("Going to");
@@ -25,6 +26,20 @@ public class Flights extends Base {
 		captureScreenshot(false);
 		searchFlights();
 		validateDefaultDate(departureDate);
+	}
+
+	@Test(priority = 2, groups = { "regression", "run" }, enabled = true)
+	public void returnFlightSearch() {
+		clickTab("Flights");
+		clickTab("Return");
+		selectCity("source", "Bengaluru");
+		selectCity("destination", "Delhi");
+		selectDate("departure", "5/11/20", "d/M/yy");
+		selectDate("return", "20/11/20", "d/M/yy");
+		selectTravelClass("Business");
+		selectTravellers(1, 0, 0);
+		captureScreenshot(false);
+		searchFlights();
 	}
 
 }

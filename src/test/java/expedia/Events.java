@@ -13,14 +13,21 @@ public class Events extends Base implements ITestListener {
 		info("|******************************************************************************************************************|");
 		info("|!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!>>>>>>>>>>>>>>>>>STARTING TEST<<<<<<<<<<<<<<!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!|");
 		info("|******************************************************************************************************************|");
-		info("Starting Test execution for the test \"" + result.getMethod().getMethodName() + "\" with test data - "
-				+ result.getParameters()[0]);
+		if (result.getParameters().length > 0)
+			info("STARTING TEST EXECUTION FOR THE TEST \"" + result.getMethod().getMethodName() + "\" WITH TEST DATA - "
+					+ result.getParameters()[0]);
+		else
+			info("STARTING TEST EXECUTION FOR THE TEST \"" + result.getMethod().getMethodName() + "\"");
 	}
 
 	@Override
 	public void onTestSuccess(ITestResult result) {
 		// TODO Auto-generated method stub
-		info(result.getMethod().getMethodName() + " PASSED with parameters " + result.getParameters()[0]);
+		if (result.getParameters().length > 0)
+			info("TEST CASE \"" + result.getMethod().getMethodName() + "\" PASSED WITH PARAMETERS "
+					+ result.getParameters()[0]);
+		else
+			info("TEST CASE \"" + result.getMethod().getMethodName() + "\" PASSED");
 		info("|******************************************************************************************************************|");
 		info("|!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!>>>>>>>>>>>>>>>>>ENDING TEST<<<<<<<<<<<<<<<<!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!|");
 		info("|******************************************************************************************************************|");
@@ -30,9 +37,11 @@ public class Events extends Base implements ITestListener {
 	public void onTestFailure(ITestResult result) {
 		// TODO Auto-generated method stub
 		Base.currentVPSSPath = Base.currentVPSSPath.replaceAll("SS\\[XXX\\]", "ERROR");
-		System.out.println("Saving screenshot at path " + Base.currentVPSSPath);
 		captureScreenshot(false);
-		error(result.getMethod().getMethodName() + " FAILED with parameters " + result.getParameters()[0]);
+		if (result.getParameters().length > 0)
+			error(result.getMethod().getMethodName() + " FAILED WITH PARAMETERS " + result.getParameters()[0]);
+		else
+			error("TEST CASE \"" + result.getMethod().getMethodName() + "\" FAILED");
 		info("|******************************************************************************************************************|");
 		info("|!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!>>>>>>>>>>>>>>>>>ENDING TEST<<<<<<<<<<<<<<<<!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!|");
 		info("|******************************************************************************************************************|");

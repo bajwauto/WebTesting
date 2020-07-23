@@ -75,6 +75,7 @@ public class Base {
 		try {
 			browser.click(tabName);
 		} catch (Exception e) {
+			e.printStackTrace();
 			Assert.fail("Could not click the Tab - " + tabName, e);
 		}
 	}
@@ -103,6 +104,7 @@ public class Base {
 				cityListButton = null;
 			}
 		} catch (Exception e) {
+			e.printStackTrace();
 			Assert.fail("Could not select " + place + " as the " + type + " city", e);
 		}
 	}
@@ -143,6 +145,7 @@ public class Base {
 			browser.click(By.cssSelector("button[data-stid='apply-date-picker'] > span"));
 			browser.scrollToPageTop();
 		} catch (Exception e) {
+			e.printStackTrace();
 			Assert.fail("Could not select " + date + " as the " + type + " date", e);
 		}
 	}
@@ -152,6 +155,7 @@ public class Base {
 			browser.click("travelClass");
 			browser.click(By.xpath("//a[@class='uitk-list-item' and contains(text(),'" + travelClassName + "')]"));
 		} catch (Exception e) {
+			e.printStackTrace();
 			Assert.fail("Could not select \"" + travelClassName + "\" as the travel class");
 		}
 
@@ -181,6 +185,7 @@ public class Base {
 				}
 			}
 		} catch (Exception e) {
+			e.printStackTrace();
 			Assert.fail("Could not select travellers correctly");
 		}
 	}
@@ -189,6 +194,7 @@ public class Base {
 		try {
 			browser.click("Search");
 		} catch (Exception e) {
+			e.printStackTrace();
 			Assert.fail("Could not click on the Serch Button");
 		}
 	}
@@ -202,6 +208,7 @@ public class Base {
 					"The results page shows flights for the date " + actualDefaultDate);
 			captureScreenshot(defaultDate);
 		} catch (Exception e) {
+			e.printStackTrace();
 			Assert.fail("Could not validate the default date");
 		}
 
