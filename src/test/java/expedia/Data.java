@@ -1,5 +1,7 @@
 package expedia;
 
+import static log.Log.info;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
@@ -17,6 +19,7 @@ public class Data {
 	public Object[][] getDataFromExcel(ITestNGMethod method) throws IOException {
 		String filePath = Utility.getAbsoluteProjectPaths("testData") + File.separator + method.getMethodName()
 				+ ".xlsx";
+		info("Reading test data from the excel file at locaton - " + filePath);
 		Excel excel = new Excel(filePath, "Data");
 		List<Map<String, Object>> excelData = excel.read();
 		Object[][] testData = new Object[excelData.size()][1];
