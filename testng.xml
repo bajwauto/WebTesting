@@ -4,7 +4,7 @@
 	<listeners>
 		<listener class-name="expedia.Events" />
 	</listeners>
-	<parameter name="browser" value="firefox" />
+	<parameter name="browser" value="chrome" />
 	<parameter name="captureScreenshots" value="true" />
 	<parameter name="url" value="https://www.expedia.co.in/" />
 	<test name="Flights">
