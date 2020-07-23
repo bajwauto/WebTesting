@@ -1,5 +1,8 @@
 package browser;
 
+import static log.Log.info;
+import static log.Log.warn;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,6 +45,7 @@ public class Browser {
 	private JavascriptExecutor jse;
 
 	public Browser(String browser) {
+		info("Launching the \"" + browser + "\" Browser");
 		switch (browser.trim().toLowerCase()) {
 		case "edge":
 			WebDriverManager.edgedriver().setup();
@@ -66,6 +70,7 @@ public class Browser {
 	 * This method is used to maximize the browser window opened by the WebDriver
 	 */
 	public void maximize() {
+		info("Maximizing browser window");
 		driver.manage().window().maximize();
 	}
 
@@ -85,6 +90,7 @@ public class Browser {
 	 * This method is used to delete all the cookies of the current domain
 	 */
 	public void deleteAllCookies() {
+		info("Deleting all the cookies");
 		driver.manage().deleteAllCookies();
 	}
 
@@ -94,6 +100,7 @@ public class Browser {
 	 * @param url - url of the website to navigate to
 	 */
 	public void goTo(String url) {
+		info("Navigating to URL - " + url);
 		driver.get(url);
 	}
 
@@ -123,11 +130,13 @@ public class Browser {
 	 * @return - A handle to the dialog
 	 */
 	private Alert switchToAlert() {
+		info("Switching to the Alert");
 		Alert alert;
 		try {
 			alert = driver.switchTo().alert();
 		} catch (Exception e) {
 			alert = null;
+			warn("Could not switch to the Alert");
 			e.printStackTrace();
 		}
 		return alert;
@@ -139,6 +148,7 @@ public class Browser {
 	 * @param frameElement - reference to the frame
 	 */
 	public void switchToFrame(WebElement frameElement) {
+		info("Switching to the frame - " + frameElement.toString());
 		driver.switchTo().frame(frameElement);
 	}
 
@@ -148,6 +158,7 @@ public class Browser {
 	 * @param windowHandle - window handle of the window to switch to
 	 */
 	public void switchToWindow(String windowHandle) {
+		info("Switching to the window with window handle - " + windowHandle);
 		driver.switchTo().window(windowHandle);
 	}
 
@@ -163,6 +174,7 @@ public class Browser {
 			alertText = null;
 		else
 			alertText = alert.getText();
+		info("Alert text fetched - " + alertText);
 		return alertText;
 	}
 
@@ -174,6 +186,7 @@ public class Browser {
 	 */
 	public void manageAlert(String action) {
 		Alert alert = switchToAlert();
+		info("Performing action \"" + action + "\" on the alert");
 		if (alert == null)
 			System.err.println("Cannot perform action on null object(alert)");
 		else {
@@ -194,7 +207,9 @@ public class Browser {
 	 * @return - title of the currently active window
 	 */
 	public String getTitle() {
-		return driver.getTitle();
+		String pageTitle = driver.getTitle();
+		info("Page title fetched - " + pageTitle);
+		return pageTitle;
 	}
 
 	/**
@@ -203,11 +218,12 @@ public class Browser {
 	 * 
 	 * @param objectName - name of the object as stored in the Object Repository
 	 * @return - reference to the object locator
+	 * @throws Exception
 	 */
-	public By getStoredObjectProperty(String objectName) {
+	public By getStoredObjectProperty(String objectName) throws Exception {
 		By by = null;
-		String orPath = Utility.getAbsoluteProjectPaths("or");
 		try {
+			String orPath = Utility.getAbsoluteProjectPaths("or");
 			String propertyValuePair = Property.read(orPath, objectName);
 			String propertyName = propertyValuePair.split("\\s*:\\s*")[0];
 			String propertyValue = propertyValuePair.split("\\s*:\\s*")[1];
@@ -238,8 +254,9 @@ public class Browser {
 				break;
 			}
 		} catch (Exception e) {
-			System.err.println("The object \"" + objectName + "\" could not be found in the OR");
-			e.printStackTrace();
+			String errorMessage = "The object \"" + objectName + "\" could not be found in the OR";
+			warn(errorMessage);
+			throw new Exception(errorMessage);
 		}
 		return by;
 	}
@@ -254,7 +271,7 @@ public class Browser {
 		WebElement element;
 		if (by == null) {
 			element = null;
-			System.err.println("Could not find element having null locator!!!");
+			warn("Could not find element having null locator!!!");
 		} else {
 			WebDriverWait wait = new WebDriverWait(driver, 20);
 			try {
@@ -279,7 +296,7 @@ public class Browser {
 		List<WebElement> elements = new ArrayList<WebElement>();
 		if (by == null) {
 			elements = null;
-			System.err.println("Could not find element having null locator!!!");
+			warn("Could not find element having null locator!!!");
 		} else {
 			WebDriverWait wait = new WebDriverWait(driver, 20);
 			try {
@@ -304,10 +321,10 @@ public class Browser {
 		List<WebElement> children = new ArrayList<WebElement>();
 		if (parentElement == null) {
 			children = null;
-			System.err.println("Cannot find child elements of a null object");
+			warn("Cannot find child elements of a null object");
 		} else if (by == null) {
 			children = null;
-			System.err.println("Cannot find child elements with null object locator");
+			warn("Cannot find child elements with null object locator");
 		} else {
 			children = parentElement.findElements(by);
 		}
@@ -321,7 +338,7 @@ public class Browser {
 	 * @param objectName - name of the object as mentioned in the OR
 	 * @return - reference to the WebElement, if found; else, null
 	 */
-	public WebElement findElement(String objectName) {
+	public WebElement findElement(String objectName) throws Exception {
 		By by = getStoredObjectProperty(objectName);
 		return findElement(by);
 	}
@@ -332,13 +349,17 @@ public class Browser {
 	 * 
 	 * @param element - reference to the Object on screen
 	 * @param text    - text to be written to the WebElement
+	 * @throws Exception
 	 */
-	public void sendKeys(WebElement element, String text) {
+	public void sendKeys(WebElement element, String text) throws Exception {
 		if (element != null) {
+			info("Sending text \"" + text + "\" to the object - " + element.toString());
 			element.sendKeys(Keys.chord(Keys.CONTROL, "a"));
 			element.sendKeys(text);
-		} else
-			System.err.println("Cannot perform sendKeys operation on a null object!!!");
+		} else {
+			warn("Cannot perform sendKeys operation on a null object!!!");
+			throw new Exception("Cannot perform sendKeys operation on a null object!!!");
+		}
 	}
 
 	/**
@@ -346,8 +367,9 @@ public class Browser {
 	 * 
 	 * @param by   - reference to the Object Locator
 	 * @param text - text to be written to the WebElement
+	 * @throws Exception
 	 */
-	public void sendKeys(By by, String text) {
+	public void sendKeys(By by, String text) throws Exception {
 		WebElement element = findElement(by);
 		sendKeys(element, text);
 	}
@@ -357,8 +379,9 @@ public class Browser {
 	 * 
 	 * @param objectName - name of the object as stored in the OR
 	 * @param text       - text to be written to the WebElement
+	 * @throws Exception
 	 */
-	public void sendKeys(String objectName, String text) {
+	public void sendKeys(String objectName, String text) throws Exception {
 		By by = getStoredObjectProperty(objectName);
 		sendKeys(by, text);
 	}
@@ -368,19 +391,23 @@ public class Browser {
 	 * 
 	 * @param element - reference to the Object
 	 */
-	public void click(WebElement element) {
-		if (element == null)
-			System.err.println("Cannot click on a null object!!!");
-		else
+	public void click(WebElement element) throws Exception {
+		if (element == null) {
+			warn("Cannot click on a null object!!!");
+			throw new Exception("Cannot click on a null object!!!");
+		} else {
+			info("Clicking on the object - " + element.toString());
 			element.click();
+		}
 	}
 
 	/**
 	 * This method is used to perform left click operation on an Object
 	 * 
 	 * @param by - reference to the Object locator
+	 * @throws Exception
 	 */
-	public void click(By by) {
+	public void click(By by) throws Exception {
 		WebElement element = findElement(by);
 		click(element);
 	}
@@ -389,8 +416,9 @@ public class Browser {
 	 * This method is used to perform left click operation on an Object
 	 * 
 	 * @param objectName- name of the object as stored in the OR
+	 * @throws Exception
 	 */
-	public void click(String objectName) {
+	public void click(String objectName) throws Exception {
 		By by = getStoredObjectProperty(objectName);
 		click(by);
 	}
@@ -399,20 +427,25 @@ public class Browser {
 	 * This method is used to move the mouse to the middle of an Object
 	 * 
 	 * @param element - reference to the Object
+	 * @throws Exception
 	 */
-	public void hoverMouse(WebElement element) {
-		if (element == null)
-			System.err.println("Cannot move the mouse to a null object!!!");
-		else
+	public void hoverMouse(WebElement element) throws Exception {
+		if (element == null) {
+			warn("Cannot move the mouse to a null object!!!");
+			throw new Exception("Cannot move the mouse to a null object!!!");
+		} else {
+			info("Hovering the mouse pointer on top of the object - " + element.toString());
 			actions.moveToElement(element).build().perform();
+		}
 	}
 
 	/**
 	 * This method is used to move the mouse to the middle of an Object
 	 * 
 	 * @param by - reference to the Object locator
+	 * @throws Exception
 	 */
-	public void hoverMouse(By by) {
+	public void hoverMouse(By by) throws Exception {
 		WebElement element = findElement(by);
 		hoverMouse(element);
 	}
@@ -421,12 +454,16 @@ public class Browser {
 	 * This method is used to perform the double click operation on an object
 	 * 
 	 * @param element - reference to the Object
+	 * @throws Exception
 	 */
-	public void doubleClick(WebElement element) {
-		if (element == null)
-			System.err.println("Cannot perform double-click on a null object!!!");
-		else
+	public void doubleClick(WebElement element) throws Exception {
+		if (element == null) {
+			warn("Cannot perform double-click on a null object!!!");
+			throw new Exception("Cannot perform double-click on a null object!!!");
+		} else {
+			info("Double-clicking on the object - " + element.toString());
 			actions.doubleClick(element).build().perform();
+		}
 	}
 
 	/**
@@ -439,6 +476,8 @@ public class Browser {
 	 * @param yOffset - pixels to move along the y-axis
 	 */
 	public void dragAndDrop(WebElement element, int xOffset, int yOffset) {
+		info("Dragging and Dropping the object \"" + element.toString() + "\" to a point which is (" + xOffset + ","
+				+ yOffset + ") pixels relative to the current position");
 		actions.dragAndDropBy(element, xOffset, yOffset).build().perform();
 	}
 
@@ -450,14 +489,17 @@ public class Browser {
 	 * @param targetElement - object on which the source object is to be dropped
 	 */
 	public void dragAndDrop(WebElement sourceElement, WebElement targetElement) {
-//		actions.dragAndDrop(sourceElement, targetElement).build().perform();
-		actions.clickAndHold(sourceElement).moveToElement(targetElement).build().perform();
+		info("Dragging the object \"" + sourceElement.toString() + "\" and dropping it on top of the object \""
+				+ targetElement.toString() + "\"");
+		actions.dragAndDrop(sourceElement, targetElement).build().perform();
+//		actions.clickAndHold(sourceElement).moveToElement(targetElement).build().perform();
 	}
 
 	/**
 	 * This method is used to scroll down to the bottom of the page
 	 */
 	public void scrollToPageBottom() {
+		info("Scrolling to the page bottom in one-go");
 		jse.executeScript("window.scrollTo(0,document.body.scrollHeight)");
 	}
 
@@ -465,6 +507,7 @@ public class Browser {
 	 * This method is used to scroll to the top of the page
 	 */
 	public void scrollToPageTop() {
+		info("Scrolling to the page top in one-go");
 		jse.executeScript("window.scrollTo(0,0)");
 	}
 
@@ -474,6 +517,7 @@ public class Browser {
 	 * @param stepSize - the pixel size of each step
 	 */
 	public void scrollToPageBottom(long stepSize) {
+		info("Scrolling to the page bottom by taking small steps(of size " + stepSize + " pixels)");
 		Double lastScrollPosition, currentScrollPosition;
 		currentScrollPosition = ((Number) jse.executeScript("return window.pageYOffset")).doubleValue();
 		lastScrollPosition = currentScrollPosition - 1;
@@ -490,6 +534,7 @@ public class Browser {
 	 * @param element - reference to the object to be brought into view
 	 */
 	public void scrollIntoView(WebElement element) {
+		info("Scrolling the page to bring the object \"" + element.toString() + "\" in the visible area");
 		jse.executeScript("arguments[0].scrollIntoView(true)", element);
 	}
 
@@ -499,13 +544,17 @@ public class Browser {
 	 * 
 	 * @param element - reference to the Object
 	 * @return - the visible text of the Object
+	 * @throws Exception
 	 */
-	public String getText(WebElement element) {
+	public String getText(WebElement element) throws Exception {
 		String text = "";
-		if (element == null)
-			System.err.println("Cannot fetch text of a null object!!!");
-		else
+		if (element == null) {
+			warn("Cannot fetch text of a null object!!!");
+			throw new Exception("Cannot fetch text of a null object!!!");
+		} else {
 			text = element.getText();
+			info("The text \"" + text + "\" was fetched from the object " + element.toString());
+		}
 		return text;
 	}
 
@@ -516,13 +565,18 @@ public class Browser {
 	 * @param attribute - name of the attribute or property whose value is required
 	 * @return - The attribute/property's current value or null if the value is not
 	 *         set.
+	 * @throws Exception
 	 */
-	public String getAttribute(WebElement element, String attribute) {
+	public String getAttribute(WebElement element, String attribute) throws Exception {
 		String attributeValue = "";
-		if (element == null)
-			System.err.println("Cannot fetch attribute values of a null object");
-		else
+		if (element == null) {
+			warn("Cannot fetch attribute values of a null object");
+			throw new Exception("Cannot fetch attribute values of a null object");
+		} else {
 			attributeValue = element.getAttribute(attribute);
+			info("The value of the attribute(\"" + attribute + "\") is \"" + attributeValue + "\" for the object "
+					+ element.toString());
+		}
 		return attributeValue;
 	}
 
@@ -531,11 +585,14 @@ public class Browser {
 	 * 
 	 * @param element        - reference to the DropDown object
 	 * @param optionToSelect - value/visible-text to be selected
+	 * @throws Exception
 	 */
-	public void selectFromDropDown(WebElement element, String optionToSelect) {
-		if (element == null)
-			System.err.println("Cannot perform select operation on a null object!!!");
-		else {
+	public void selectFromDropDown(WebElement element, String optionToSelect) throws Exception {
+		if (element == null) {
+			warn("Cannot perform select operation on a null object!!!");
+			throw new Exception("Cannot perform select operation on a null object!!!");
+		} else {
+			info("Selecting the option " + optionToSelect + " from the drop-down list - " + element.toString());
 			Select dropDown = new Select(element);
 			try {
 				dropDown.selectByVisibleText(optionToSelect);
@@ -543,7 +600,8 @@ public class Browser {
 				try {
 					dropDown.selectByValue(optionToSelect);
 				} catch (NoSuchElementException e2) {
-					System.err.println("The option \"" + optionToSelect + "\"could not be selected from the dropdown");
+					warn("The option \"" + optionToSelect + "\"could not be selected from the dropdown");
+					throw new Exception("The option \"" + optionToSelect + "\"could not be selected from the dropdown");
 				}
 			}
 		}
@@ -556,12 +614,14 @@ public class Browser {
 	 * @param filePath - path to the file where the screenshot is to be saved
 	 */
 	public void captureScreenshot(String filePath) {
+		info("Capturing screenshot of the visible area and saving at path - " + filePath);
 		File file = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
 		try {
 			File dest = new File(filePath);
 			Utility.createDirectory(dest.getParent());
 			FileUtils.copyFile(file, dest);
 		} catch (IOException e) {
+			warn("Could not capture & save the visible area screenshot at path - " + filePath);
 			e.printStackTrace();
 		}
 	}
@@ -573,6 +633,7 @@ public class Browser {
 	 * @param element  - reference to the Object whose screenshot is to be captured
 	 */
 	public void captureScreenshot(String filePath, WebElement element) {
+		info("Capturing screenshot of the object \"" + element.toString() + "\" and saving at path - " + filePath);
 		Screenshot screenshot = new AShot().coordsProvider(new WebDriverCoordsProvider())
 				.shootingStrategy(ShootingStrategies.viewportPasting(500)).takeScreenshot(driver, element);
 		try {
@@ -580,7 +641,8 @@ public class Browser {
 			Utility.createDirectory(dest.getParent());
 			ImageIO.write(screenshot.getImage(), "jpg", dest);
 		} catch (IOException e) {
-			e.printStackTrace();
+			warn("Could not capture & save the screenshot of the object \"" + element.toString() + "\" at path - "
+					+ filePath);
 		}
 	}
 
@@ -592,6 +654,7 @@ public class Browser {
 	 * @param element  - object to be highlighted/boxed in the screenshot
 	 */
 	public void captureScreenshotWithHighlightedElement(String filePath, WebElement element) {
+		info("Highlighting the object - " + element.toString());
 		jse.executeScript("arguments[0].setAttribute('style','border:2px solid red;')", element);
 		captureScreenshot(filePath);
 		jse.executeScript("arguments[0].style.border='2px white;'", element);
@@ -604,6 +667,7 @@ public class Browser {
 	 * @param filePath - path to the file where the screenshot is to be saved
 	 */
 	public void capturePageScreenshot(String filePath) {
+		info("Capturing screenshot of the entire webpage and saving at path - " + filePath);
 		Screenshot screenshot = new AShot().coordsProvider(new WebDriverCoordsProvider())
 				.shootingStrategy(ShootingStrategies.viewportPasting(1000)).takeScreenshot(driver);
 		try {
@@ -611,6 +675,7 @@ public class Browser {
 			Utility.createDirectory(dest.getParent());
 			ImageIO.write(screenshot.getImage(), "jpg", dest);
 		} catch (IOException e) {
+			warn("Could not capture & save the screenshot of the entire webpage at path - " + filePath);
 			e.printStackTrace();
 		}
 	}
@@ -620,6 +685,7 @@ public class Browser {
 	 * the WebDriver
 	 */
 	public void close() {
+		info("Closing the active window opened by the WebDriver");
 		driver.close();
 	}
 
@@ -628,6 +694,7 @@ public class Browser {
 	 * the WebDriver
 	 */
 	public void quit() {
+		info("Closing all the windows/tabs opened by the WebDriver");
 		driver.quit();
 	}
 }
