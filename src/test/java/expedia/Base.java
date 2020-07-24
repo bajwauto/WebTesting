@@ -6,7 +6,11 @@ import static log.Log.info;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.ElementClickInterceptedException;
@@ -17,6 +21,7 @@ import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
 import org.testng.annotations.Optional;
 import org.testng.annotations.Parameters;
+import org.testng.asserts.SoftAssert;
 
 import browser.Browser;
 import utils.Utility;
@@ -166,6 +171,9 @@ public class Base {
 			if (adults <= 6 && children <= 6 && infants <= 6) {
 				browser.click("travellers");
 				WebElement adultTravellers = browser.findElement(By.id("adult-input-0"));
+				for (int i = Integer.parseInt(browser.getAttribute(adultTravellers, "value")); i > 1; i--) {
+					browser.click(By.xpath("//input[@id='adult-input-0']/preceding-sibling::button"));
+				}
 				while (Integer.parseInt(browser.getAttribute(adultTravellers, "value")) != adults)
 					browser.click(By.xpath("//input[@id='adult-input-0']/following-sibling::button"));
 				WebElement childTravellers = browser.findElement(By.id("child-input-0"));
@@ -192,7 +200,9 @@ public class Base {
 
 	public void searchFlights() {
 		try {
+			captureScreenshot(false);
 			browser.click("Search");
+			browser.findElement(By.cssSelector("button[data-test-id='select-button']"));
 		} catch (Exception e) {
 			e.printStackTrace();
 			Assert.fail("Could not click on the Serch Button");
@@ -211,7 +221,180 @@ public class Base {
 			e.printStackTrace();
 			Assert.fail("Could not validate the default date");
 		}
+	}
 
+	public void validateReturnFlightDetails(Map<String, Object> data) {
+		SoftAssert azzert = new SoftAssert();
+		try {
+			browser.click(By.id("flights-advanced-options-toggle"));
+			String actualSource = browser.getAttribute(browser.findElement(By.cssSelector("input#departure-airport-1")),
+					"value");
+			String expectedSource = (String) data.get("Leaving from");
+
+			String actualDestination = browser
+					.getAttribute(browser.findElement(By.cssSelector("input#arrival-airport-1")), "value");
+			String expectedDestination = (String) data.get("Going to");
+
+			WebElement actualDepartureDate = browser.findElement(By.cssSelector("input#departure-date-1"));
+			String actualDepartureDateValue = browser.getAttribute(actualDepartureDate, "value");
+			String expectedDepartureDateValue = Utility.changeDateFormat((String) data.get("Departure Date"), "d/M/yy",
+					"dd/MM/yyyy");
+
+			WebElement actualReturnDate = browser.findElement(By.cssSelector("input#return-date-1"));
+			String actualReturnDateValue = browser.getAttribute(actualReturnDate, "value");
+			String expectedReturnDateValue = Utility.changeDateFormat((String) data.get("Return Date"), "d/M/yy",
+					"dd/MM/yyyy");
+
+			String actualClass = browser
+					.getSelectedOptionFromDropdown(browser.findElement(By.cssSelector("select#seating-class")));
+			String expectedClass = (String) data.get("Travel Class");
+
+			info("Actual Source City: " + actualSource + "\nExpected Source City: " + expectedSource);
+			azzert.assertTrue(actualSource.contains(expectedSource),
+					"Actual Source City: " + actualSource + "\nExpected Source City: " + expectedSource);
+			info("Actual Destination City: " + actualDestination + "\nExpected Destination City: "
+					+ expectedDestination);
+			azzert.assertTrue(actualDestination.contains(expectedDestination), "Actual Destination City: "
+					+ actualDestination + "\nExpected Destination City: " + expectedDestination);
+			info("Actual Departure Date: " + actualDepartureDateValue + "\nExpected Departure Date: "
+					+ expectedDepartureDateValue);
+			azzert.assertTrue(actualDepartureDateValue.equalsIgnoreCase(expectedDepartureDateValue),
+					"Actual Departure Date: " + actualDepartureDateValue + "\nExpected Departure Date: "
+							+ expectedDepartureDateValue);
+			info("Actual Return Date: " + actualReturnDateValue + "\nExpected Return Date: " + expectedReturnDateValue);
+			azzert.assertTrue(actualReturnDateValue.equalsIgnoreCase(expectedReturnDateValue), "Actual Return Date: "
+					+ actualReturnDateValue + "\nExpected Return Date: " + expectedReturnDateValue);
+			info("Actual Tavel Class: " + actualClass + "\nExpected Travel Class: " + expectedClass);
+			azzert.assertTrue(actualClass.contains(expectedClass),
+					"Actual Class: " + actualClass + "\nExpected Travel Class: " + expectedClass);
+
+			azzert.assertAll();
+			captureScreenshot(browser.findElement(By.id("wizardSearch")));
+
+		} catch (Exception e) {
+			Assert.fail("Could not validate the Flight Search Details");
+		}
+	}
+
+	public void validateSorting(String sortBy) {
+		try {
+			SoftAssert azzert = new SoftAssert();
+			browser.selectFromDropDown(browser.findElement("sortFlights"), sortBy);
+			switch (sortBy) {
+			case "Price (Highest)":
+				List<Double> actualAOPrices = new ArrayList<Double>();
+				List<Double> expectedAOPrices = new ArrayList<Double>();
+				browser.findElement(By.cssSelector("ul.segmented-list.results-list.price-sort"));
+				List<WebElement> flightAOPriceElements = browser
+						.findElements(By.cssSelector("span[data-test-id='listing-price-dollars']"));
+				for (WebElement flightPriceElement : flightAOPriceElements) {
+					Double currentPrice = Double
+							.parseDouble(browser.getText(flightPriceElement).replaceAll("Rs|,", ""));
+					actualAOPrices.add(currentPrice);
+					expectedAOPrices.add(currentPrice);
+				}
+				Collections.sort(expectedAOPrices, Collections.reverseOrder());
+				info("Actual Sorted Prices: " + actualAOPrices + "\nExpected Sorted prices: " + expectedAOPrices);
+				azzert.assertEquals(actualAOPrices, expectedAOPrices,
+						"The flight details are not correctly sorted by " + sortBy);
+				break;
+			case "Price (Lowest)":
+				List<Double> actualDOPrices = new ArrayList<Double>();
+				List<Double> expectedDOPrices = new ArrayList<Double>();
+				browser.findElement(By.cssSelector("ul.segmented-list.results-list.price-sort"));
+				List<WebElement> flightDOPriceElements = browser
+						.findElements(By.cssSelector("span[data-test-id='listing-price-dollars']"));
+				for (WebElement flightPriceElement : flightDOPriceElements) {
+					Double currentPrice = Double
+							.parseDouble(browser.getText(flightPriceElement).replaceAll("Rs|,", ""));
+					actualDOPrices.add(currentPrice);
+					expectedDOPrices.add(currentPrice);
+				}
+				Collections.sort(expectedDOPrices);
+				info("Actual Sorted Prices: " + actualDOPrices + "\nExpected Sorted prices: " + expectedDOPrices);
+				azzert.assertEquals(actualDOPrices, expectedDOPrices,
+						"The flight details are not correctly sorted by " + sortBy);
+				break;
+			case "Duration (Shortest)":
+				List<Integer> actualAODurations = new ArrayList<Integer>();
+				List<Integer> expectedAODurations = new ArrayList<Integer>();
+				browser.findElement(By.cssSelector("ul.segmented-list.results-list.duration-sort"));
+				List<WebElement> flightAODurationElements = browser
+						.findElements(By.cssSelector("span[data-test-id='duration']"));
+				for (WebElement flightDurationElement : flightAODurationElements) {
+					String currentDuration = browser.getText(flightDurationElement).trim();
+					List<String> mAndH = Utility.getMatchesNGroups(currentDuration, "(\\d+)h\\s*(\\d+)m").get(0);
+					int currentDurationMinutes = Integer.parseInt(mAndH.get(1)) * 60 + Integer.parseInt(mAndH.get(2));
+					actualAODurations.add(currentDurationMinutes);
+					expectedAODurations.add(currentDurationMinutes);
+				}
+				Collections.sort(expectedAODurations);
+				info("Actual Sorted Flight Durations(minutes): " + actualAODurations
+						+ "\nExpected Sorted Flight Durations(minutes): " + expectedAODurations);
+				azzert.assertEquals(actualAODurations, expectedAODurations,
+						"The flight details are not correctly sorted by " + sortBy);
+				break;
+			case "Duration (Longest)":
+				List<Integer> actualDODurations = new ArrayList<Integer>();
+				List<Integer> expectedDODurations = new ArrayList<Integer>();
+				browser.findElement(By.cssSelector("ul.segmented-list.results-list.duration-sort"));
+				List<WebElement> flightDODurationElements = browser
+						.findElements(By.cssSelector("span[data-test-id='duration']"));
+				for (WebElement flightDurationElement : flightDODurationElements) {
+					String currentDuration = browser.getText(flightDurationElement).trim();
+					List<String> mAndH = Utility.getMatchesNGroups(currentDuration, "(\\d+)h\\s*(\\d+)m").get(0);
+					int currentDurationMinutes = Integer.parseInt(mAndH.get(1)) * 60 + Integer.parseInt(mAndH.get(2));
+					actualDODurations.add(currentDurationMinutes);
+					expectedDODurations.add(currentDurationMinutes);
+				}
+				Collections.sort(expectedDODurations, Collections.reverseOrder());
+				info("Actual Sorted Flight Durations(minutes): " + actualDODurations
+						+ "\nExpected Sorted Flight Durations(minutes): " + expectedDODurations);
+				azzert.assertEquals(actualDODurations, expectedDODurations,
+						"The flight details are not correctly sorted by " + sortBy);
+				break;
+			}
+			azzert.assertAll();
+			captureScreenshot(true);
+		} catch (Exception e) {
+			Assert.fail("Sorting Validation Failed");
+		}
+	}
+
+	public void openFeedbackPage() {
+		try {
+			browser.click("signIn");
+			browser.click("Feedback");
+			WebElement websiteFeedback = browser.findElement(By.xpath("//a[contains(text(),'Website Feedback')]/.."));
+			browser.click(websiteFeedback);
+		} catch (Exception e) {
+			Assert.fail("Unable to open the feedback page");
+		}
+	}
+
+	public void provideFeedback(Map<String, Object> data) {
+		String rating = (String) data.get("Rating");
+		String topic = (String) data.get("Topic");
+		String description = (String) data.get("Description");
+		String email = (String) data.get("Email");
+		String ratingClass = "";
+
+		try {
+			WebElement feedbackTopic = browser.findElement("FeedbackTopic");
+			WebElement ratingButton = browser.findElement(By.cssSelector("a[title='" + rating + "']"));
+			browser.click(ratingButton);
+			ratingClass = browser.getAttribute(ratingButton, "class").replaceAll(" ", ".");
+			ratingClass = Utility.getMatchesNGroups(ratingClass, "^\\w+\\.\\w+").get(0).get(0);
+			browser.selectFromDropDown(feedbackTopic, topic);
+			browser.sendKeys("FeedbackBox", description);
+			if (!email.trim().equalsIgnoreCase(""))
+				browser.sendKeys("FeedbackEmail", email);
+			browser.click("SendFeedback");
+			browser.findElement(By.cssSelector("div."+ratingClass));
+			captureScreenshot(browser.findElement(By.cssSelector("div."+ratingClass)));
+		} catch (Exception e) {
+			Assert.fail("Could not provide appropriate feedback");
+		}
 	}
 
 	protected void captureScreenshot(boolean fullPageScreenshot) {
