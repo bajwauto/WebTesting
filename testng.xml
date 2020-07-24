@@ -16,5 +16,10 @@
 		<classes>
 			<class name="expedia.Flights" />
 		</classes>
-	</test> <!-- Flights -->
+	</test>
+	<test name="Feedback">
+		<classes>
+			<class name="expedia.Feedback" />
+		</classes>
+	</test><!-- Flights -->
 </suite> <!-- ExpediaRegression -->
