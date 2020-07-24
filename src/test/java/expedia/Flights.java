@@ -1,6 +1,7 @@
 package expedia;
 
 import java.util.Map;
+
 import org.testng.annotations.Test;
 
 public class Flights extends Base {
@@ -23,23 +24,55 @@ public class Flights extends Base {
 		selectDate("departure", departureDate, "d/M/yy");
 		selectTravelClass(travelClass);
 		selectTravellers(adults, children, infants);
-		captureScreenshot(false);
 		searchFlights();
 		validateDefaultDate(departureDate);
 	}
 
-	@Test(priority = 2, groups = { "regression", "run" }, enabled = true)
-	public void returnFlightSearch() {
+	@Test(dataProviderClass = Data.class, dataProvider = "excel", priority = 2, groups = {
+			"regression" }, enabled = true)
+	public void returnFlight_searchDetailsValidation(Map<String, Object> data) {
+		String leavingFrom = (String) data.get("Leaving from");
+		String gointTo = (String) data.get("Going to");
+		String departureDate = (String) data.get("Departure Date");
+		String returnDate = (String) data.get("Return Date");
+		String travelClass = (String) data.get("Travel Class");
+		int adults = ((Double) data.get("Adults")).intValue();
+		int children = ((Double) data.get("Children")).intValue();
+		int infants = ((Double) data.get("Infants")).intValue();
+
 		clickTab("Flights");
 		clickTab("Return");
-		selectCity("source", "Bengaluru");
-		selectCity("destination", "Delhi");
-		selectDate("departure", "5/11/20", "d/M/yy");
-		selectDate("return", "20/11/20", "d/M/yy");
-		selectTravelClass("Business");
-		selectTravellers(1, 0, 0);
-		captureScreenshot(false);
+		selectCity("source", leavingFrom);
+		selectCity("destination", gointTo);
+		selectDate("departure", departureDate, "d/M/yy");
+		selectDate("return", returnDate, "d/M/yy");
+		selectTravelClass(travelClass);
+		selectTravellers(adults, children, infants);
 		searchFlights();
+		validateReturnFlightDetails(data);
 	}
 
+	@Test(dataProviderClass = Data.class, dataProvider = "excel", priority = 3, groups = { "regression" })
+	public void returnFlight_sortingValidation(Map<String, Object> data) {
+		String leavingFrom = (String) data.get("Leaving from");
+		String gointTo = (String) data.get("Going to");
+		String departureDate = (String) data.get("Departure Date");
+		String returnDate = (String) data.get("Return Date");
+		String travelClass = (String) data.get("Travel Class");
+		int adults = ((Double) data.get("Adults")).intValue();
+		int children = ((Double) data.get("Children")).intValue();
+		int infants = ((Double) data.get("Infants")).intValue();
+		String sortBy = (String) data.get("sort by");
+
+		clickTab("Flights");
+		clickTab("Return");
+		selectCity("source", leavingFrom);
+		selectCity("destination", gointTo);
+		selectDate("departure", departureDate, "d/M/yy");
+		selectDate("return", returnDate, "d/M/yy");
+		selectTravelClass(travelClass);
+		selectTravellers(adults, children, infants);
+		searchFlights();
+		validateSorting(sortBy);
+	}
 }
