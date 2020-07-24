@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
 <suite name="ExpediaRegression">
+	<groups>
+		<run>
+			<include name="regression" />
+		</run>
+	</groups>
 	<listeners>
 		<listener class-name="expedia.Events" />
 	</listeners>
@@ -11,5 +16,10 @@
 		<classes>
 			<class name="expedia.Flights" />
 		</classes>
-	</test> <!-- Flights -->
+	</test>
+	<test name="Feedback">
+		<classes>
+			<class name="expedia.Feedback" />
+		</classes>
+	</test><!-- Flights -->
 </suite> <!-- ExpediaRegression -->

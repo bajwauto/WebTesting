@@ -608,6 +608,17 @@ public class Browser {
 	}
 
 	/**
+	 * 
+	 * @param element - reference to the drop down list from where selected option
+	 *                is to be retrieved
+	 * @return selected option in the dropdown list
+	 */
+	public String getSelectedOptionFromDropdown(WebElement element) throws Exception {
+		Select select = new Select(element);
+		return getText(select.getFirstSelectedOption());
+	}
+
+	/**
 	 * This method is used to capture the screenshot and save it to the provided
 	 * location
 	 * 
