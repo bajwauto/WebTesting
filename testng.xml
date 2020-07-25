@@ -8,6 +8,8 @@
 	</groups>
 	<listeners>
 		<listener class-name="expedia.Events" />
+		<listener class-name="org.uncommons.reportng.HTMLReporter" />
+		<listener class-name="support.custom.AnnotationTransformer"></listener>
 	</listeners>
 	<parameter name="browser" value="chrome" />
 	<parameter name="captureScreenshots" value="true" />

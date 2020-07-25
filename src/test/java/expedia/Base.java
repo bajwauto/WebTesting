@@ -37,6 +37,7 @@ public class Base {
 	protected static boolean captureScreenshots = false;
 	protected static String lastTestMethod = "";
 	protected static String configPath = Utility.getAbsoluteProjectPaths("configuration");
+	private static String escapeProperty = "org.uncommons.reportng.escape-output";
 
 	@BeforeSuite(alwaysRun = true)
 	@Parameters({ "browser", "captureScreenshots" })
@@ -46,6 +47,7 @@ public class Base {
 				Utility.decode(Xml.read(configPath, "//executionLogsEmail/username/text()").get(0)));
 		System.setProperty("emailPass",
 				Utility.decode(Xml.read(configPath, "//executionLogsEmail/password/text()").get(0)));
+		System.setProperty(escapeProperty, "false");
 		getLogger("Expedia");
 		info("Suite execution started");
 		browser = new Browser(browserName);
@@ -390,8 +392,8 @@ public class Base {
 			if (!email.trim().equalsIgnoreCase(""))
 				browser.sendKeys("FeedbackEmail", email);
 			browser.click("SendFeedback");
-			browser.findElement(By.cssSelector("div."+ratingClass));
-			captureScreenshot(browser.findElement(By.cssSelector("div."+ratingClass)));
+			browser.findElement(By.cssSelector("div." + ratingClass));
+			captureScreenshot(browser.findElement(By.cssSelector("div." + ratingClass)));
 		} catch (Exception e) {
 			Assert.fail("Could not provide appropriate feedback");
 		}
