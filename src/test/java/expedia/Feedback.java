@@ -4,8 +4,12 @@ import java.util.Map;
 
 import org.testng.annotations.Test;
 
+import support.custom.Retry;
+
 public class Feedback extends Base {
-	@Test(dataProviderClass = Data.class, dataProvider = "excel", groups = { "run" }, priority = 4, enabled = true)
+	@Retry
+	@Test(dataProviderClass = Data.class, dataProvider = "excel", groups = {
+			"regression" }, priority = 4, enabled = true)
 	public void websiteFeedback(Map<String, Object> data) {
 		openFeedbackPage();
 		provideFeedback(data);

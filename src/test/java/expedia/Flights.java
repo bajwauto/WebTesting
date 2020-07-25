@@ -4,8 +4,11 @@ import java.util.Map;
 
 import org.testng.annotations.Test;
 
+import support.custom.Retry;
+
 public class Flights extends Base {
 
+	@Retry
 	@Test(dataProviderClass = Data.class, dataProvider = "excel", priority = 1, groups = {
 			"regression" }, enabled = true)
 	public void oneWayFlight_checkEconomyClassResultsDefaultDate(Map<String, Object> data) {
@@ -28,6 +31,7 @@ public class Flights extends Base {
 		validateDefaultDate(departureDate);
 	}
 
+	@Retry
 	@Test(dataProviderClass = Data.class, dataProvider = "excel", priority = 2, groups = {
 			"regression" }, enabled = true)
 	public void returnFlight_searchDetailsValidation(Map<String, Object> data) {
@@ -52,6 +56,7 @@ public class Flights extends Base {
 		validateReturnFlightDetails(data);
 	}
 
+	@Retry
 	@Test(dataProviderClass = Data.class, dataProvider = "excel", priority = 3, groups = { "regression" })
 	public void returnFlight_sortingValidation(Map<String, Object> data) {
 		String leavingFrom = (String) data.get("Leaving from");
