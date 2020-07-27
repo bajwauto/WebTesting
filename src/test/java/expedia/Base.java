@@ -30,7 +30,7 @@ import xml.Xml;
 public class Base {
 	protected static Browser browser;
 	protected static String vpScreenshotBasePath = Utility.getAbsoluteProjectPaths("screenshots") + File.separator
-			+ Utility.formatDate(new Date(), "dd-MMM-yy'" + File.separator + "'hh.mm a");
+			+ Utility.formatDate(new Date(), "dd-MMM-yy'" + File.separator + "'hh.mm.ss a");
 	protected static String currentVPSSPath;
 	protected static int sscounter = 0;
 	protected static int icounter = 1;
@@ -38,21 +38,28 @@ public class Base {
 	protected static String lastTestMethod = "";
 	protected static String configPath = Utility.getAbsoluteProjectPaths("configuration");
 	private static String escapeProperty = "org.uncommons.reportng.escape-output";
+	protected static String reportsPath = vpScreenshotBasePath.replaceAll("screenshots", "reports");
+	public static boolean enableExtentReport;
 
 	@BeforeSuite(alwaysRun = true)
-	@Parameters({ "browser", "captureScreenshots" })
-	public void suiteSetup(@Optional("chrome") String browserName, @Optional("true") String captureScreenshots)
-			throws IOException {
+	@Parameters({ "browser", "captureScreenshots", "enableExtentReport" })
+	public void suiteSetup(@Optional("chrome") String browserName, @Optional("true") String captureScreenshots,
+			@Optional("false") String enableExtentReporting) throws IOException {
 		System.setProperty("emailUser",
 				Utility.decode(Xml.read(configPath, "//executionLogsEmail/username/text()").get(0)));
 		System.setProperty("emailPass",
 				Utility.decode(Xml.read(configPath, "//executionLogsEmail/password/text()").get(0)));
 		System.setProperty(escapeProperty, "false");
+
+		enableExtentReport = Boolean.parseBoolean(enableExtentReporting);
+		if (enableExtentReport)
+			Utility.createDirectory(reportsPath);
+
 		getLogger("Expedia");
 		info("Suite execution started");
 		browser = new Browser(browserName);
 		browser.maximize();
-		this.captureScreenshots = Boolean.parseBoolean(captureScreenshots);
+		Base.captureScreenshots = Boolean.parseBoolean(captureScreenshots);
 	}
 
 	@BeforeMethod(alwaysRun = true)
