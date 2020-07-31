@@ -2,6 +2,10 @@ package support.custom;
 
 import org.testng.IRetryAnalyzer;
 import org.testng.ITestResult;
+
+import browser.Browser;
+import expedia.Base;
+
 import static log.Log.info;
 
 public class RetryAnalyser implements IRetryAnalyzer {
@@ -13,7 +17,8 @@ public class RetryAnalyser implements IRetryAnalyzer {
 		if (annotation != null && annotation.count() > counter) {
 			counter++;
 			info("THE TEST \"" + result.getName() + "\" HAS " + getStatus(result.getStatus())
-					+ ". RETRYING TEST EXECUTION(ATTEMPT )" + counter);
+					+ ". RETRYING TEST EXECUTION(ATTEMPT " + counter + ")");
+			Base.icounter.set(Base.icounter.get() - 1);
 			return true;
 		} else {
 			counter = 0;
