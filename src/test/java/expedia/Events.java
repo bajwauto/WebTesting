@@ -15,22 +15,42 @@ import com.aventstack.extentreports.ExtentTest;
 import com.aventstack.extentreports.markuputils.ExtentColor;
 import com.aventstack.extentreports.markuputils.Markup;
 import com.aventstack.extentreports.markuputils.MarkupHelper;
-import com.aventstack.extentreports.reporter.ExtentHtmlReporter;
+import com.aventstack.extentreports.reporter.ExtentSparkReporter;
 import com.aventstack.extentreports.reporter.configuration.Theme;
 
-public class Events extends Base implements ITestListener {
-	private static ExtentHtmlReporter htmlReporter;
+public class Events implements ITestListener {
+	private static ExtentSparkReporter htmlReporter;
 	private static ExtentReports extentReports;
-	private static ExtentTest extentTest;
-	private static Markup markup;
+	private static ThreadLocal<ExtentTest> extentTest = new ThreadLocal<ExtentTest>();
+
+	@Override
+	public void onStart(ITestContext context) {
+		if (Base.enableExtentReport) {
+			String testName = context.getName();
+			String extentReportPath = Base.reportsPath + File.separator + testName + ".html";
+			htmlReporter = new ExtentSparkReporter(extentReportPath);
+			htmlReporter.config().setEncoding("UTF-8");
+			htmlReporter.config().setTheme(Theme.DARK);
+			htmlReporter.config().setDocumentTitle("Expedia Test Automation");
+			htmlReporter.config().setReportName(testName);
+			extentReports = new ExtentReports();
+			extentReports.attachReporter(htmlReporter);
+			extentReports.setSystemInfo("Application", "Expedia");
+			extentReports.setSystemInfo("URL", "https://www.expedia.co.in/");
+			extentReports.setSystemInfo("Automation Tester", "Bajwauto");
+			extentReports.setSystemInfo("Organisation", "Bajwa Auto works Co.");
+		}
+	}
 
 	@Override
 	public void onTestStart(ITestResult result) {
 		String testMethodName = result.getMethod().getMethodName();
-		if (extentReports != null)
-			extentTest = extentReports.createTest(testMethodName);
-		else
-			extentTest = null;
+		if (extentReports != null) {
+			ExtentTest localExtentTest = extentReports.createTest(testMethodName);
+			extentTest.set(localExtentTest);
+		} else
+			extentTest.set(null);
+
 		info("|******************************************************************************************************************|");
 		info("|!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!>>>>>>>>>>>>>>>>>STARTING TEST<<<<<<<<<<<<<<!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!|");
 		info("|******************************************************************************************************************|");
@@ -53,9 +73,9 @@ public class Events extends Base implements ITestListener {
 		info("|******************************************************************************************************************|");
 		info("|!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!>>>>>>>>>>>>>>>>>ENDING TEST<<<<<<<<<<<<<<<<!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!|");
 		info("|******************************************************************************************************************|");
-		if (extentTest != null) {
-			markup = MarkupHelper.createLabel(logMessage, ExtentColor.GREEN);
-			extentTest.pass(markup);
+		if (extentTest.get() != null) {
+			Markup markup = MarkupHelper.createLabel(logMessage, ExtentColor.GREEN);
+			extentTest.get().pass(markup);
 		}
 	}
 
@@ -63,8 +83,8 @@ public class Events extends Base implements ITestListener {
 	public void onTestFailure(ITestResult result) {
 		String testMethodName = result.getMethod().getMethodName();
 		String logMessage;
-		Base.currentVPSSPath = Base.currentVPSSPath.replaceAll("SS\\[XXX\\]", "ERROR");
-		captureScreenshot(false);
+		Base.currentVPSSPath.set(Base.currentVPSSPath.get().replaceAll("SS\\[XXX\\]", "ERROR"));
+		Base.captureScreenshot(false);
 		if (result.getParameters().length > 0)
 			logMessage = testMethodName + " FAILED WITH PARAMETERS " + result.getParameters()[0];
 		else
@@ -73,9 +93,9 @@ public class Events extends Base implements ITestListener {
 		info("|******************************************************************************************************************|");
 		info("|!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!>>>>>>>>>>>>>>>>>ENDING TEST<<<<<<<<<<<<<<<<!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!|");
 		info("|******************************************************************************************************************|");
-		if (extentTest != null) {
-			markup = MarkupHelper.createLabel(logMessage, ExtentColor.RED);
-			extentTest.fail(markup);
+		if (extentTest.get() != null) {
+			Markup markup = MarkupHelper.createLabel(logMessage, ExtentColor.GREEN);
+			extentTest.get().fail(markup);
 		}
 	}
 
@@ -89,43 +109,9 @@ public class Events extends Base implements ITestListener {
 		else
 			logMessage = "THE TEST CASE \"" + testMethodName + "\" HAS SKIPPED EXECUTION";
 		warn(logMessage);
-		if (extentTest != null) {
-			markup = MarkupHelper.createLabel(logMessage, ExtentColor.YELLOW);
-			extentTest.warning(markup);
-		}
-	}
-
-	@Override
-	public void onTestFailedButWithinSuccessPercentage(ITestResult result) {
-		// TODO Auto-generated method stub
-		ITestListener.super.onTestFailedButWithinSuccessPercentage(result);
-	}
-
-	@Override
-	public void onTestFailedWithTimeout(ITestResult result) {
-		// TODO Auto-generated method stub
-		ITestListener.super.onTestFailedWithTimeout(result);
-	}
-
-	@Override
-	public void onStart(ITestContext context) {
-		String testName = context.getName();
-		if (Base.enableExtentReport) {
-			String extentReportPath = Base.reportsPath + File.separator + testName + ".html";
-			htmlReporter = new ExtentHtmlReporter(extentReportPath);
-			htmlReporter.config().setEncoding("UTF-8");
-			htmlReporter.config().setTheme(Theme.DARK);
-			htmlReporter.config().setDocumentTitle("Expedia Test Automation");
-			htmlReporter.config().setReportName(testName);
-			extentReports = new ExtentReports();
-			extentReports.attachReporter(htmlReporter);
-			extentReports.setSystemInfo("Application", "Expedia");
-			extentReports.setSystemInfo("URL", "https://www.expedia.co.in/");
-			extentReports.setSystemInfo("Automation Tester", "Bajwauto");
-			extentReports.setSystemInfo("Organisation", "Bajwa Auto works Co.");
-		} else {
-			htmlReporter = null;
-			extentReports = null;
+		if (extentTest.get() != null) {
+			Markup markup = MarkupHelper.createLabel(logMessage, ExtentColor.GREEN);
+			extentTest.get().warning(markup);
 		}
 	}
 

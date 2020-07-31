@@ -16,6 +16,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.ElementClickInterceptedException;
 import org.openqa.selenium.WebElement;
 import org.testng.Assert;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeSuite;
@@ -31,20 +32,32 @@ public class Base {
 	protected static Browser browser;
 	protected static String vpScreenshotBasePath = Utility.getAbsoluteProjectPaths("screenshots") + File.separator
 			+ Utility.formatDate(new Date(), "dd-MMM-yy'" + File.separator + "'hh.mm.ss a");
-	protected static String currentVPSSPath;
-	protected static int sscounter = 0;
-	protected static int icounter = 1;
 	protected static boolean captureScreenshots = false;
-	protected static String lastTestMethod = "";
 	protected static String configPath = Utility.getAbsoluteProjectPaths("configuration");
 	private static String escapeProperty = "org.uncommons.reportng.escape-output";
 	protected static String reportsPath = vpScreenshotBasePath.replaceAll("screenshots", "reports");
 	public static boolean enableExtentReport;
 
+	// Thread local variables
+	protected static ThreadLocal<String> currentVPSSPath = new ThreadLocal<String>();
+	private static ThreadLocal<Integer> sscounter = new ThreadLocal<Integer>();
+	public static ThreadLocal<Integer> icounter = new ThreadLocal<Integer>() {
+		@Override
+		protected Integer initialValue() {
+			return 1;
+		}
+	};
+
+	private static ThreadLocal<String> lastTestMethod = new ThreadLocal<String>() {
+		protected String initialValue() {
+			return "";
+		}
+	};
+
 	@BeforeSuite(alwaysRun = true)
-	@Parameters({ "browser", "captureScreenshots", "enableExtentReport" })
-	public void suiteSetup(@Optional("chrome") String browserName, @Optional("true") String captureScreenshots,
-			@Optional("false") String enableExtentReporting) throws IOException {
+	@Parameters({ "captureScreenshots", "enableExtentReport" })
+	public void suiteSetup(@Optional("true") String captureScreenshots, @Optional("false") String enableExtentReporting)
+			throws IOException {
 		System.setProperty("emailUser",
 				Utility.decode(Xml.read(configPath, "//executionLogsEmail/username/text()").get(0)));
 		System.setProperty("emailPass",
@@ -57,31 +70,36 @@ public class Base {
 
 		getLogger("Expedia");
 		info("Suite execution started");
-		browser = new Browser(browserName);
-		browser.maximize();
 		Base.captureScreenshots = Boolean.parseBoolean(captureScreenshots);
 	}
 
 	@BeforeMethod(alwaysRun = true)
-	@Parameters("url")
-	public void testSetup(String baseURL, Method method) {
+	@Parameters({ "browser", "url" })
+	public void testSetup(@Optional("chrome") String browserName, String baseURL, Method method) {
+		browser = Browser.getInstance();
+		browser.set(browserName);
+		browser.maximize();
 		String currentTestMethod = method.getName();
-		sscounter = 0;
-		if (currentTestMethod.equalsIgnoreCase(lastTestMethod))
-			icounter++;
+		sscounter.set(0);
+		if (currentTestMethod.equalsIgnoreCase(lastTestMethod.get()))
+			icounter.set(icounter.get() + 1);
 		else
-			icounter = 1;
+			icounter.set(1);
 
-		currentVPSSPath = vpScreenshotBasePath + File.separator + currentTestMethod + File.separator + "Dataset"
-				+ icounter + "_SS[XXX].jpg";
-		lastTestMethod = currentTestMethod;
+		currentVPSSPath.set(vpScreenshotBasePath + File.separator + currentTestMethod + File.separator + "Dataset"
+				+ icounter.get() + "_SS[XXX].jpg");
+		lastTestMethod.set(currentTestMethod);
 		browser.deleteAllCookies();
 		browser.goTo(baseURL);
 	}
 
+	@AfterMethod(alwaysRun = true)
+	public void methodTeardown() {
+		browser.quit();
+	}
+
 	@AfterSuite(alwaysRun = true)
 	public void suiteTeardown() {
-		browser.quit();
 		info("Suite execution completed");
 	}
 
@@ -374,7 +392,7 @@ public class Base {
 		try {
 			browser.click("signIn");
 			browser.click("Feedback");
-			WebElement websiteFeedback = browser.findElement(By.xpath("//a[contains(text(),'Website Feedback')]/.."));
+			WebElement websiteFeedback = browser.findElement(By.cssSelector("div.websitefeedback"));
 			browser.click(websiteFeedback);
 		} catch (Exception e) {
 			Assert.fail("Unable to open the feedback page");
@@ -406,21 +424,21 @@ public class Base {
 		}
 	}
 
-	protected void captureScreenshot(boolean fullPageScreenshot) {
+	protected static void captureScreenshot(boolean fullPageScreenshot) {
 		if (captureScreenshots) {
-			sscounter++;
+			sscounter.set(sscounter.get() + 1);
 			if (fullPageScreenshot)
-				browser.capturePageScreenshot(currentVPSSPath.replaceAll("\\[XXX\\]", sscounter + ""));
+				browser.capturePageScreenshot(currentVPSSPath.get().replaceAll("\\[XXX\\]", sscounter.get() + ""));
 			else
-				browser.captureScreenshot(currentVPSSPath.replaceAll("\\[XXX\\]", sscounter + ""));
+				browser.captureScreenshot(currentVPSSPath.get().replaceAll("\\[XXX\\]", sscounter.get() + ""));
 		}
 	}
 
-	protected void captureScreenshot(WebElement element) {
+	protected static void captureScreenshot(WebElement element) {
 		if (captureScreenshots) {
-			sscounter++;
-			browser.captureScreenshotWithHighlightedElement(currentVPSSPath.replaceAll("\\[XXX\\]", sscounter + ""),
-					element);
+			sscounter.set(sscounter.get() + 1);
+			browser.captureScreenshotWithHighlightedElement(
+					currentVPSSPath.get().replaceAll("\\[XXX\\]", sscounter.get() + ""), element);
 		}
 
 	}
