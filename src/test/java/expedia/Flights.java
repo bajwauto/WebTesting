@@ -32,7 +32,7 @@ public class Flights extends Base {
 	}
 
 	@Retry
-	@Test(dataProviderClass = Data.class, dataProvider = "excel", priority = 2, groups = {
+	@Test(dataProviderClass = Data.class, dataProvider = "excel", priority = 3, groups = {
 			"regression" }, enabled = true)
 	public void returnFlight_searchDetailsValidation(Map<String, Object> data) {
 		String leavingFrom = (String) data.get("Leaving from");
@@ -57,7 +57,7 @@ public class Flights extends Base {
 	}
 
 	@Retry
-	@Test(dataProviderClass = Data.class, dataProvider = "excel", priority = 3, groups = { "regression" })
+	@Test(dataProviderClass = Data.class, dataProvider = "excel", priority = 2, groups = { "regression" })
 	public void returnFlight_sortingValidation(Map<String, Object> data) {
 		String leavingFrom = (String) data.get("Leaving from");
 		String gointTo = (String) data.get("Going to");
