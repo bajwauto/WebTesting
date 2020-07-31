@@ -35,7 +35,7 @@
 			from="${sender}" smtpHost="${host}" smtpPort="${port}"
 			smtpUsername="${username}" smtpPassword="${password}"
 			buffersize="${bufferSize}" smtpProtocol="${protocol}"
-			ignoreExceptions="false" smtpdebug="true">
+			ignoreExceptions="false" smtpdebug="false">
 			<PatternLayout pattern="${standardPattern}" />
 			<Filters>
 				<ThresholdFilter level="error" onMatch="ACCEPT"
