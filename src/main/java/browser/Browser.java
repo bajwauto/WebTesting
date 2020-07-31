@@ -40,30 +40,40 @@ import ru.yandex.qatools.ashot.shooting.ShootingStrategies;
 import utils.Utility;
 
 public class Browser {
-	private WebDriver driver;
+	private static Browser instance = null;
+	private static ThreadLocal<WebDriver> driver = new ThreadLocal<WebDriver>();
 	private Actions actions;
-	private JavascriptExecutor jse;
+	private static ThreadLocal<JavascriptExecutor> jse = new ThreadLocal<JavascriptExecutor>();
 
-	public Browser(String browser) {
+	private Browser() {
+	}
+
+	public void set(String browser) {
 		info("Launching the \"" + browser + "\" Browser");
 		switch (browser.trim().toLowerCase()) {
 		case "edge":
 			WebDriverManager.edgedriver().setup();
-			driver = new EdgeDriver();
+			driver.set(new EdgeDriver());
 			break;
 		case "firefox":
 			WebDriverManager.firefoxdriver().setup();
-			driver = new FirefoxDriver();
+			driver.set(new FirefoxDriver());
 			break;
 		case "chrome":
 		default:
 			ChromeOptions options = new ChromeOptions();
 			options.addArguments("--disable-notifications");
 			WebDriverManager.chromedriver().setup();
-			driver = new ChromeDriver(options);
+			driver.set(new ChromeDriver(options));
 		}
-		actions = new Actions(driver);
-		jse = (JavascriptExecutor) driver;
+		actions = new Actions(driver.get());
+		jse.set((JavascriptExecutor) driver.get());
+	}
+
+	public static Browser getInstance() {
+		if (instance == null)
+			instance = new Browser();
+		return instance;
 	}
 
 	/**
@@ -71,7 +81,7 @@ public class Browser {
 	 */
 	public void maximize() {
 		info("Maximizing browser window");
-		driver.manage().window().maximize();
+		driver.get().manage().window().maximize();
 	}
 
 	/**
@@ -83,7 +93,7 @@ public class Browser {
 	 * @param unit - the unit of time
 	 */
 	public void setImplicitTimeout(long time, TimeUnit unit) {
-		driver.manage().timeouts().implicitlyWait(time, unit);
+		driver.get().manage().timeouts().implicitlyWait(time, unit);
 	}
 
 	/**
@@ -91,7 +101,7 @@ public class Browser {
 	 */
 	public void deleteAllCookies() {
 		info("Deleting all the cookies");
-		driver.manage().deleteAllCookies();
+		driver.get().manage().deleteAllCookies();
 	}
 
 	/**
@@ -101,7 +111,7 @@ public class Browser {
 	 */
 	public void goTo(String url) {
 		info("Navigating to URL - " + url);
-		driver.get(url);
+		driver.get().get(url);
 	}
 
 	/**
@@ -110,7 +120,7 @@ public class Browser {
 	 * @return String containing the window handle for the currently active window
 	 */
 	public String getWindowHandle() {
-		return driver.getWindowHandle();
+		return driver.get().getWindowHandle();
 	}
 
 	/**
@@ -121,7 +131,7 @@ public class Browser {
 	 *         WebDriver
 	 */
 	public Iterator<String> getWindowHandles() {
-		return driver.getWindowHandles().iterator();
+		return driver.get().getWindowHandles().iterator();
 	}
 
 	/**
@@ -133,7 +143,7 @@ public class Browser {
 		info("Switching to the Alert");
 		Alert alert;
 		try {
-			alert = driver.switchTo().alert();
+			alert = driver.get().switchTo().alert();
 		} catch (Exception e) {
 			alert = null;
 			warn("Could not switch to the Alert");
@@ -149,7 +159,7 @@ public class Browser {
 	 */
 	public void switchToFrame(WebElement frameElement) {
 		info("Switching to the frame - " + frameElement.toString());
-		driver.switchTo().frame(frameElement);
+		driver.get().switchTo().frame(frameElement);
 	}
 
 	/**
@@ -159,7 +169,7 @@ public class Browser {
 	 */
 	public void switchToWindow(String windowHandle) {
 		info("Switching to the window with window handle - " + windowHandle);
-		driver.switchTo().window(windowHandle);
+		driver.get().switchTo().window(windowHandle);
 	}
 
 	/**
@@ -207,7 +217,7 @@ public class Browser {
 	 * @return - title of the currently active window
 	 */
 	public String getTitle() {
-		String pageTitle = driver.getTitle();
+		String pageTitle = driver.get().getTitle();
 		info("Page title fetched - " + pageTitle);
 		return pageTitle;
 	}
@@ -273,7 +283,7 @@ public class Browser {
 			element = null;
 			warn("Could not find element having null locator!!!");
 		} else {
-			WebDriverWait wait = new WebDriverWait(driver, 20);
+			WebDriverWait wait = new WebDriverWait(driver.get(), 20);
 			try {
 				element = wait.until(ExpectedConditions.visibilityOfElementLocated(by));
 			} catch (Exception e) {
@@ -298,7 +308,7 @@ public class Browser {
 			elements = null;
 			warn("Could not find element having null locator!!!");
 		} else {
-			WebDriverWait wait = new WebDriverWait(driver, 20);
+			WebDriverWait wait = new WebDriverWait(driver.get(), 20);
 			try {
 				elements = wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(by));
 			} catch (Exception e) {
@@ -500,7 +510,7 @@ public class Browser {
 	 */
 	public void scrollToPageBottom() {
 		info("Scrolling to the page bottom in one-go");
-		jse.executeScript("window.scrollTo(0,document.body.scrollHeight)");
+		jse.get().executeScript("window.scrollTo(0,document.body.scrollHeight)");
 	}
 
 	/**
@@ -508,7 +518,7 @@ public class Browser {
 	 */
 	public void scrollToPageTop() {
 		info("Scrolling to the page top in one-go");
-		jse.executeScript("window.scrollTo(0,0)");
+		jse.get().executeScript("window.scrollTo(0,0)");
 	}
 
 	/**
@@ -519,12 +529,12 @@ public class Browser {
 	public void scrollToPageBottom(long stepSize) {
 		info("Scrolling to the page bottom by taking small steps(of size " + stepSize + " pixels)");
 		Double lastScrollPosition, currentScrollPosition;
-		currentScrollPosition = ((Number) jse.executeScript("return window.pageYOffset")).doubleValue();
+		currentScrollPosition = ((Number) jse.get().executeScript("return window.pageYOffset")).doubleValue();
 		lastScrollPosition = currentScrollPosition - 1;
 		while (currentScrollPosition > lastScrollPosition) {
 			lastScrollPosition = currentScrollPosition;
-			jse.executeScript("window.scrollBy(0," + stepSize + ")");
-			currentScrollPosition = ((Number) jse.executeScript("return window.pageYOffset")).doubleValue();
+			jse.get().executeScript("window.scrollBy(0," + stepSize + ")");
+			currentScrollPosition = ((Number) jse.get().executeScript("return window.pageYOffset")).doubleValue();
 		}
 	}
 
@@ -535,7 +545,7 @@ public class Browser {
 	 */
 	public void scrollIntoView(WebElement element) {
 		info("Scrolling the page to bring the object \"" + element.toString() + "\" in the visible area");
-		jse.executeScript("arguments[0].scrollIntoView(true)", element);
+		jse.get().executeScript("arguments[0].scrollIntoView(true)", element);
 	}
 
 	/**
@@ -626,7 +636,7 @@ public class Browser {
 	 */
 	public void captureScreenshot(String filePath) {
 		info("Capturing screenshot of the visible area and saving at path - " + filePath);
-		File file = ((TakesScreenshot) driver).getScreenshotAs(OutputType.FILE);
+		File file = ((TakesScreenshot) driver.get()).getScreenshotAs(OutputType.FILE);
 		try {
 			File dest = new File(filePath);
 			Utility.createDirectory(dest.getParent());
@@ -646,7 +656,7 @@ public class Browser {
 	public void captureScreenshot(String filePath, WebElement element) {
 		info("Capturing screenshot of the object \"" + element.toString() + "\" and saving at path - " + filePath);
 		Screenshot screenshot = new AShot().coordsProvider(new WebDriverCoordsProvider())
-				.shootingStrategy(ShootingStrategies.viewportPasting(500)).takeScreenshot(driver, element);
+				.shootingStrategy(ShootingStrategies.viewportPasting(500)).takeScreenshot(driver.get(), element);
 		try {
 			File dest = new File(filePath);
 			Utility.createDirectory(dest.getParent());
@@ -666,9 +676,9 @@ public class Browser {
 	 */
 	public void captureScreenshotWithHighlightedElement(String filePath, WebElement element) {
 		info("Highlighting the object - " + element.toString());
-		jse.executeScript("arguments[0].setAttribute('style','border:2px solid red;')", element);
+		jse.get().executeScript("arguments[0].setAttribute('style','border:2px solid red;')", element);
 		captureScreenshot(filePath);
-		jse.executeScript("arguments[0].style.border='2px white;'", element);
+		jse.get().executeScript("arguments[0].style.border='2px white;'", element);
 	}
 
 	/**
@@ -680,7 +690,7 @@ public class Browser {
 	public void capturePageScreenshot(String filePath) {
 		info("Capturing screenshot of the entire webpage and saving at path - " + filePath);
 		Screenshot screenshot = new AShot().coordsProvider(new WebDriverCoordsProvider())
-				.shootingStrategy(ShootingStrategies.viewportPasting(1000)).takeScreenshot(driver);
+				.shootingStrategy(ShootingStrategies.viewportPasting(1000)).takeScreenshot(driver.get());
 		try {
 			File dest = new File(filePath);
 			Utility.createDirectory(dest.getParent());
@@ -697,7 +707,7 @@ public class Browser {
 	 */
 	public void close() {
 		info("Closing the active window opened by the WebDriver");
-		driver.close();
+		driver.get().close();
 	}
 
 	/**
@@ -706,6 +716,6 @@ public class Browser {
 	 */
 	public void quit() {
 		info("Closing all the windows/tabs opened by the WebDriver");
-		driver.quit();
+		driver.get().quit();
 	}
 }
