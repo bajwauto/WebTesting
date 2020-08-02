@@ -1,27 +1,32 @@
 package support.custom;
 
+import static log.Log.info;
+
 import org.testng.IRetryAnalyzer;
 import org.testng.ITestResult;
 
-import browser.Browser;
 import expedia.Base;
 
-import static log.Log.info;
-
 public class RetryAnalyser implements IRetryAnalyzer {
-	private static int counter = 0;
+	//Making it thread-local for the case when the tests are executed in parallel from the DataProvider itself
+	private static ThreadLocal<Integer> counter = new ThreadLocal<Integer>() {
+		protected Integer initialValue() {
+			return 0;
+		}
+	};
 
 	@Override
 	public boolean retry(ITestResult result) {
 		Retry annotation = result.getMethod().getConstructorOrMethod().getMethod().getAnnotation(Retry.class);
-		if (annotation != null && annotation.count() > counter) {
-			counter++;
+		if (annotation != null && annotation.count() > counter.get()) {
+			counter.set(counter.get() + 1);
 			info("THE TEST \"" + result.getName() + "\" HAS " + getStatus(result.getStatus())
-					+ ". RETRYING TEST EXECUTION(ATTEMPT " + counter + ")");
-			Base.icounter.set(Base.icounter.get() - 1);
+					+ ". RETRYING TEST EXECUTION(ATTEMPT " + counter.get() + ")");
+			Base.retrying.set(true);
 			return true;
 		} else {
-			counter = 0;
+			counter.set(0);
+			;
 			return false;
 		}
 	}

@@ -6,9 +6,11 @@ import static log.Log.info;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -37,6 +39,13 @@ public class Base {
 	private static String escapeProperty = "org.uncommons.reportng.escape-output";
 	protected static String reportsPath = vpScreenshotBasePath.replaceAll("screenshots", "reports");
 	public static boolean enableExtentReport;
+	public static boolean useSeleniumGrid;
+	public static Map<String, Integer> testIterations = new HashMap<String, Integer>();
+	public static ThreadLocal<Boolean> retrying = new ThreadLocal<Boolean>() {
+		protected Boolean initialValue() {
+			return false;
+		}
+	};
 
 	// Thread local variables
 	protected static ThreadLocal<String> currentVPSSPath = new ThreadLocal<String>();
@@ -44,20 +53,14 @@ public class Base {
 	public static ThreadLocal<Integer> icounter = new ThreadLocal<Integer>() {
 		@Override
 		protected Integer initialValue() {
-			return 1;
-		}
-	};
-
-	private static ThreadLocal<String> lastTestMethod = new ThreadLocal<String>() {
-		protected String initialValue() {
-			return "";
+			return 0;
 		}
 	};
 
 	@BeforeSuite(alwaysRun = true)
-	@Parameters({ "captureScreenshots", "enableExtentReport" })
-	public void suiteSetup(@Optional("true") String captureScreenshots, @Optional("false") String enableExtentReporting)
-			throws IOException {
+	@Parameters({ "captureScreenshots", "enableExtentReport", "useGrid" })
+	public void suiteSetup(@Optional("true") String captureScreenshots, @Optional("false") String enableExtentReporting,
+			@Optional("false") String useSeleniumGrid) throws IOException {
 		System.setProperty("emailUser",
 				Utility.decode(Xml.read(configPath, "//executionLogsEmail/username/text()").get(0)));
 		System.setProperty("emailPass",
@@ -65,30 +68,39 @@ public class Base {
 		System.setProperty(escapeProperty, "false");
 
 		enableExtentReport = Boolean.parseBoolean(enableExtentReporting);
+		Base.useSeleniumGrid = Boolean.parseBoolean(useSeleniumGrid);
+		Base.captureScreenshots = Boolean.parseBoolean(captureScreenshots);
 		if (enableExtentReport)
 			Utility.createDirectory(reportsPath);
-
 		getLogger("Expedia");
 		info("Suite execution started");
-		Base.captureScreenshots = Boolean.parseBoolean(captureScreenshots);
+		info("Capturing Screenshots: " + Base.captureScreenshots);
+		info("Generating Extent Report: " + enableExtentReport);
+		info("Executing via RemoteWebDriver(using Selenium Grid): " + Base.useSeleniumGrid);
 	}
 
 	@BeforeMethod(alwaysRun = true)
-	@Parameters({ "browser", "url" })
-	public void testSetup(@Optional("chrome") String browserName, String baseURL, Method method) {
-		browser = Browser.getInstance();
-		browser.set(browserName);
-		browser.maximize();
+	@Parameters({ "seleniumGridHubURL", "browser", "url" })
+	public void testSetup(@Optional("http://localhost:4444/wd/hub") String gridURL,
+			@Optional("chrome") String browserName, String baseURL, Method method) throws MalformedURLException {
+		// Logic for setting the screenshot path during parallel execution
 		String currentTestMethod = method.getName();
 		sscounter.set(0);
-		if (currentTestMethod.equalsIgnoreCase(lastTestMethod.get()))
-			icounter.set(icounter.get() + 1);
-		else
-			icounter.set(1);
-
+		if (!retrying.get()) {
+			int maxCount = testIterations.get(currentTestMethod);
+			icounter.set(maxCount--);
+			testIterations.put(currentTestMethod, maxCount);
+		} else
+			retrying.set(false);
 		currentVPSSPath.set(vpScreenshotBasePath + File.separator + currentTestMethod + File.separator + "Dataset"
 				+ icounter.get() + "_SS[XXX].jpg");
-		lastTestMethod.set(currentTestMethod);
+
+		browser = Browser.getInstance();
+		if (Base.useSeleniumGrid)
+			browser.set(browserName, gridURL);
+		else
+			browser.set(browserName, null);
+		browser.maximize();
 		browser.deleteAllCookies();
 		browser.goTo(baseURL);
 	}

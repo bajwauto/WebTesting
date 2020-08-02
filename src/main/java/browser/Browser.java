@@ -5,6 +5,8 @@ import static log.Log.warn;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -26,7 +28,9 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.interactions.Actions;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -48,23 +52,41 @@ public class Browser {
 	private Browser() {
 	}
 
-	public void set(String browser) {
-		info("Launching the \"" + browser + "\" Browser");
-		switch (browser.trim().toLowerCase()) {
-		case "edge":
-			WebDriverManager.edgedriver().setup();
-			driver.set(new EdgeDriver());
-			break;
-		case "firefox":
-			WebDriverManager.firefoxdriver().setup();
-			driver.set(new FirefoxDriver());
-			break;
-		case "chrome":
-		default:
-			ChromeOptions options = new ChromeOptions();
-			options.addArguments("--disable-notifications");
-			WebDriverManager.chromedriver().setup();
-			driver.set(new ChromeDriver(options));
+	public void set(String browser, String gridURL) throws MalformedURLException {
+		if (gridURL == null) {
+			info("Launching the \"" + browser + "\" Browser");
+			switch (browser.trim().toLowerCase()) {
+			case "edge":
+				WebDriverManager.edgedriver().setup();
+				driver.set(new EdgeDriver());
+				break;
+			case "firefox":
+				FirefoxOptions firefoxOptions = new FirefoxOptions();
+//				firefoxOptions.setHeadless(true);
+				WebDriverManager.firefoxdriver().setup();
+				driver.set(new FirefoxDriver(firefoxOptions));
+				break;
+			case "chrome":
+			default:
+				ChromeOptions options = new ChromeOptions();
+				WebDriverManager.chromedriver().setup();
+				options.addArguments("--disable-notifications");
+				driver.set(new ChromeDriver(options));
+			}
+		} else {
+			info("Launching the \"" + browser + "\" Browser");
+			switch (browser.trim().toLowerCase()) {
+			case "firefox":
+				FirefoxOptions firefoxOptions = new FirefoxOptions();
+				firefoxOptions.setHeadless(true);
+				driver.set(new RemoteWebDriver(new URL(gridURL), firefoxOptions));
+				break;
+			case "chrome":
+			default:
+				ChromeOptions chromeOptions = new ChromeOptions();
+				chromeOptions.addArguments("--disable-notifications");
+				driver.set(new RemoteWebDriver(new URL(gridURL), chromeOptions));
+			}
 		}
 		actions = new Actions(driver.get());
 		jse.set((JavascriptExecutor) driver.get());
