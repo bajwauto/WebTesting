@@ -1,7 +1,5 @@
 package support.custom;
 
-import static log.Log.info;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 

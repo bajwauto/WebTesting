@@ -16,7 +16,7 @@ import utils.Utility;
 
 public class Data {
 
-	@DataProvider(name = "excel")
+	@DataProvider(name = "excel", parallel = true)
 	public Object[][] getDataFromExcel(ITestNGMethod method) {
 		String filePath = Utility.getAbsoluteProjectPaths("testData") + File.separator + method.getMethodName()
 				+ ".xlsx";
@@ -26,6 +26,10 @@ public class Data {
 		Object[][] testData = null;
 		try {
 			excelData = excel.read();
+			// The data set size is to be stored once and only once. Even in case a test is
+			// re-tried, this value should not be updated again
+			if (!Base.testIterations.containsKey(method.getMethodName()))
+				Base.testIterations.put(method.getMethodName(), excelData.size());
 			testData = new Object[excelData.size()][1];
 			for (int i = 0; i < excelData.size(); i++)
 				testData[i][0] = excelData.get(i);
@@ -33,6 +37,7 @@ public class Data {
 			error("Test data file not found at path - " + filePath);
 			Assert.fail("Test data file not found at path - " + filePath);
 		}
+		System.out.println(Base.testIterations);
 		return testData;
 	}
 }
