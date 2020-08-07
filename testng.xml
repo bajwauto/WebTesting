@@ -14,8 +14,8 @@
 	</listeners>
 	<parameter name="seleniumGridHubURL"
 		value="http://localhost:4444/wd/hub" />
-	<parameter name="useGrid" value="true" />
-	<parameter name="browser" value="chrome" />
+	<parameter name="useGrid" value="false" />
+	<parameter name="browser" value="firefox" />
 	<parameter name="captureScreenshots" value="true" />
 	<parameter name="url" value="https://www.expedia.co.in/" />
 	<parameter name="enableExtentReport" value="true" />
