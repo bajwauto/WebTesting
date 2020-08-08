@@ -19,6 +19,17 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<version>3.0.0-M2</version>
 				<configuration>
+					<groups>${groups}</groups>							<!-- This overrides the groups to be executed mentioned in testng.xml file -->
+					<parallel>methods</parallel>						<!-- This overrides the thread-count attribute present in testng.xml file -->
+					<threadCount>2</threadCount>						<!-- This overrides the thread-count attribute present in testng.xml file -->
+					<systemPropertyVariables>
+						<browser>${browser}</browser>								<!-- The parameter "browser" has been removed from testng.xml as it was overriding 
+							the value mentioned here -->
+						<captureScreenshots>${screenshots}</captureScreenshots>		<!-- The parameter "captureScreenshots" has been removed from testng.xml 
+							as it was overriding the value mentioned here -->
+						<enableExtentReport>${extentreports}</enableExtentReport>	<!-- The parameter "enableExtentReport" has been removed from testng.xml 
+							as it was overriding the value mentioned here -->
+					</systemPropertyVariables>
 					<suiteXmlFiles>
 						<suiteXmlFile>testng.xml</suiteXmlFile>
 					</suiteXmlFiles>

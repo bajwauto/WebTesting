@@ -1,7 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-<suite name="ExpediaRegression" parallel="methods"
-	thread-count="2" data-provider-thread-count="2">
+<suite name="ExpediaRegression" parallel="methods" thread-count="2" data-provider-thread-count="2">
 	<groups>
 		<run>
 			<include name="regression" />
@@ -12,13 +11,12 @@
 		<listener class-name="org.uncommons.reportng.HTMLReporter" />
 		<listener class-name="support.custom.AnnotationTransformer"></listener>
 	</listeners>
-	<parameter name="seleniumGridHubURL"
-		value="http://localhost:4444/wd/hub" />
+	<parameter name="seleniumGridHubURL" value="http://localhost:4444/wd/hub" />
 	<parameter name="useGrid" value="false" />
-	<parameter name="browser" value="firefox" />
-	<parameter name="captureScreenshots" value="true" />
+	<!--<parameter name="browser" value="firefox" /> This value will be passed from maven command line/pom-->
+	<!--<parameter name="captureScreenshots" value="true" /> This value will be passed from maven command line/pom-->
+	<!--<parameter name="enableExtentReport" value="true" /> This value will be passed from maven command line/pom-->
 	<parameter name="url" value="https://www.expedia.co.in/" />
-	<parameter name="enableExtentReport" value="true" />
 	<test name="Expedia Regression">
 		<classes>
 			<class name="expedia.Flights" />
