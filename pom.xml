@@ -25,6 +25,8 @@
 					<systemPropertyVariables>
 						<browser>${browser}</browser>								<!-- The parameter "browser" has been removed from testng.xml as it was overriding 
 							the value mentioned here -->
+						<useGrid>${usegrid}</useGrid>								<!-- The parameter "useGrid" has been removed from testng.xml as it was overriding 
+							the value mentioned here -->
 						<captureScreenshots>${screenshots}</captureScreenshots>		<!-- The parameter "captureScreenshots" has been removed from testng.xml 
 							as it was overriding the value mentioned here -->
 						<enableExtentReport>${extentreports}</enableExtentReport>	<!-- The parameter "enableExtentReport" has been removed from testng.xml 
