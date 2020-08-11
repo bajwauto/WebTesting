@@ -12,7 +12,7 @@
 		<listener class-name="support.custom.AnnotationTransformer"></listener>
 	</listeners>
 	<parameter name="seleniumGridHubURL" value="http://localhost:4444/wd/hub" />
-	<parameter name="useGrid" value="false" />
+	<!--parameter name="useGrid" value="true" /> This value will be passed from maven command line/pom-->
 	<!--<parameter name="browser" value="firefox" /> This value will be passed from maven command line/pom-->
 	<!--<parameter name="captureScreenshots" value="true" /> This value will be passed from maven command line/pom-->
 	<!--<parameter name="enableExtentReport" value="true" /> This value will be passed from maven command line/pom-->
